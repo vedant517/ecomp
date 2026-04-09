@@ -8,6 +8,8 @@ import compression from 'compression';
 
 import productRoutes from './routes/productRoutes.js';
 import configRoutes from './routes/configRoutes.js';
+import categoryRoutes from './routes/categoryRoutes.js';
+import brandRoutes from './routes/brandRoutes.js';
 
 // Load env vars
 dotenv.config();
@@ -28,6 +30,8 @@ app.use(compression());
 // Routes
 app.use('/api/products', productRoutes);
 app.use('/api/config', configRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/brands', brandRoutes);
 
 app.get('/', (req, res) => {
   res.send('API is running...');

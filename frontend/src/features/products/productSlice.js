@@ -24,8 +24,7 @@ export const fetchProducts = createAsyncThunk(
 
 /**
  * addProduct — accepts plain object OR FormData.
- * If called with a plain object it builds FormData internally so the
- * backend always receives multipart/form-data (required when an image
+ * multipart/form-data (required when an image
  * file is attached).
  */
 export const addProduct = createAsyncThunk(
@@ -90,7 +89,7 @@ export const deleteProduct = createAsyncThunk(
         headers: getAuthHeader(thunkAPI),
       });
       return id;
-    } catch (error) {
+    } catch (error) { 
       return thunkAPI.rejectWithValue(error.response?.data?.message || error.message);
     }
   }
