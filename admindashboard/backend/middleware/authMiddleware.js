@@ -19,3 +19,14 @@ exports.protect = (req, res, next) => {
     return res.status(401).json({ msg: "Invalid or expired token" });
   }
 };
+
+exports.authorize = (...roles) => {
+  return (req, res, next) => {
+    if (!req.user || !roles.includes(req.user.role)) {
+      return res.status(403).json({
+        msg: `User role ${req.user?.role || 'unknown'} is not authorized to access this route`,
+      });
+    }
+    next();
+  };
+};

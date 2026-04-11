@@ -1,8 +1,6 @@
 import Product from '../models/Product.js';
 
-// @desc    Get all products
-// @route   GET /api/products
-// @access  Public
+
 export const getProducts = async (req, res) => {
   try {
     const { category, search, sort, page = 1, limit = 20 } = req.query;
@@ -20,6 +18,9 @@ export const getProducts = async (req, res) => {
 
     const total = await Product.countDocuments(query);
     const products = await Product.find(query)
+      .populate('category', 'name')
+      .populate('brand', 'name logo')
+      .populate('subcategory', 'name')
       .sort(sortOpt)
       .skip(skip)
       .limit(Number(limit));
@@ -42,7 +43,7 @@ export const getProducts = async (req, res) => {
 // @access  Private/Admin
 export const createProduct = async (req, res) => {
   try {
-    const { name, description, price, category, stock } = req.body;
+    const { name, description, price, category, subcategory, brand, stock } = req.body;
 
     // Validate required fields
     if (!name || !description || !price || !category || !stock) {
@@ -57,13 +58,15 @@ export const createProduct = async (req, res) => {
       description,
       price: Number(price),
       category,
+      subcategory,
+      brand,
       stock: Number(stock),
       user: req.user.id,
     };
 
     // If an image was uploaded via Cloudinary, attach secure_url
     if (req.file) {
-      productData.image = req.file.path; // Cloudinary returns `path` as the secure URL
+      productData.image = req.file.path; //  URL
     }
 
     const product = await Product.create(productData);
@@ -74,12 +77,13 @@ export const createProduct = async (req, res) => {
   }
 };
 
-// @desc    Get single product
-// @route   GET /api/products/:id
-// @access  Public
+
 export const getProduct = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const product = await Product.findById(req.params.id)
+      .populate('category', 'name')
+      .populate('brand', 'name logo')
+      .populate('subcategory', 'name');
     if (!product) {
       return res.status(404).json({ success: false, message: 'Product not found' });
     }
@@ -89,9 +93,7 @@ export const getProduct = async (req, res) => {
   }
 };
 
-// @desc    Update product
-// @route   PUT /api/products/:id
-// @access  Private/Admin
+
 export const updateProduct = async (req, res) => {
   try {
     let product = await Product.findById(req.params.id);
@@ -114,9 +116,7 @@ export const updateProduct = async (req, res) => {
   }
 };
 
-// @desc    Delete product
-// @route   DELETE /api/products/:id
-// @access  Private/Admin
+
 export const deleteProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);

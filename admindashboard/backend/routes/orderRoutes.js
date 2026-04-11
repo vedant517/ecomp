@@ -8,8 +8,8 @@ const {
   getOrderStats
 } = require("../controllers/order.controller");
 
-const { protect } = require("../middleware/auth.middleware");
-const { isAdmin } = require("../middleware/admin.middleware");
+const { protect } = require("../middleware/authMiddleware");
+const { isAdmin } = require("../middleware/adminMiddleware");
 
 // 🔐 Admin only
 router.use(protect, isAdmin);

@@ -3,7 +3,11 @@ import Brand from '../models/Brand.js';
 // Get all available brands
 export const getBrands = async (req, res) => {
   try {
-    const brands = await Brand.find();
+    let query = {};
+    if (req.query.category) {
+      query.categories = req.query.category;
+    }
+    const brands = await Brand.find(query);
     res.status(200).json({ success: true, count: brands.length, data: brands });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -13,13 +17,14 @@ export const getBrands = async (req, res) => {
 // Create a new brand (Admin only)
 export const createBrand = async (req, res) => {
   try {
-    const { name, description, logo } = req.body;
+    const { name, description, logo, categories } = req.body;
     const slug = name.toLowerCase().split(' ').join('-');
     
     const brand = await Brand.create({ 
       name, 
       description, 
       logo,
+      categories: categories || [],
       slug 
     });
     

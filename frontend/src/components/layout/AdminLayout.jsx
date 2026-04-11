@@ -8,6 +8,7 @@ import {
   Grid3X3,
   Receipt,
   Bookmark,
+  Layers,
   PlusCircle,
   Image as ImageIcon,
   List,
@@ -27,11 +28,12 @@ const navGroups = [
   {
     title: 'Main menu',
     items: [
-      { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
+      { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
       { icon: ShoppingCart, label: 'Order Management', path: '/orders' },
       { icon: Users, label: 'Customers', path: '/customers' },
       { icon: Ticket, label: 'Coupon Code', path: '/coupons' },
       { icon: Grid3X3, label: 'Categories', path: '/categories' },
+      { icon: Layers, label: 'Subcategories', path: '/subcategories' },
       { icon: Receipt, label: 'Transaction', path: '/transactions' },
       { icon: Bookmark, label: 'Brand', path: '/brands' },
     ],
@@ -41,7 +43,7 @@ const navGroups = [
     items: [
       { icon: PlusCircle, label: 'Add Products', path: '/add-product' },
       { icon: ImageIcon, label: 'Product Media', path: '/media' },
-      { icon: List, label: 'Product List', path: '/product-list' },
+      { icon: List, label: 'Product List', path: '/products' },
       { icon: Star, label: 'Product Reviews', path: '/reviews' },
     ],
   },
@@ -54,7 +56,7 @@ const navGroups = [
   },
 ];
 
-export default function AdminLayout() {
+export default function AdminLayout({ setIsAuthenticated }) {
   const location = useLocation();
 
   return (
@@ -125,35 +127,26 @@ export default function AdminLayout() {
         </nav>
 
         {/* Profile Footer */}
-        <div style={{ borderTop: '1px solid #f1f5f9', padding: '12px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px', marginBottom: '8px' }}>
-            <img
-              src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=60&q=80"
-              alt="Admin"
-              style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #e2e8f0', flexShrink: 0 }}
-            />
-            <div style={{ overflow: 'hidden', flex: 1 }}>
-              <div style={{ fontWeight: 700, fontSize: '12px', color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Dealport</div>
-              <div style={{ fontSize: '10px', color: '#94a3b8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>mark@thedesigner.com</div>
-            </div>
-            <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: '4px' }}>
-              <LogOut size={15} />
-            </button>
-          </div>
-
-          <Link
-            to="#"
-            style={{
-              display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px',
-              border: '1px solid #e2e8f0', borderRadius: '8px', textDecoration: 'none',
-              fontSize: '12px', fontWeight: 700, color: '#334155',
-              background: '#fafafa'
+        <div style={{ borderTop: '1px solid #f1f5f9', padding: '16px' }}>
+          <button
+            onClick={() => {
+              localStorage.removeItem('token');
+              if (setIsAuthenticated) setIsAuthenticated(false);
+              else window.location.href = '/';
             }}
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+              padding: '12px', width: '100%', cursor: 'pointer',
+              border: '1px solid #fecaca', borderRadius: '8px',
+              fontSize: '13px', fontWeight: 700, color: '#ef4444',
+              background: '#fef2f2', transition: 'all 0.2s'
+            }}
+            onMouseOver={(e) => e.currentTarget.style.background = '#fee2e2'}
+            onMouseOut={(e) => e.currentTarget.style.background = '#fef2f2'}
           >
-            <Grid3X3 size={13} style={{ color: '#10b981' }} />
-            <span style={{ flex: 1 }}>Your Shop</span>
-            <ExternalLink size={12} style={{ color: '#94a3b8' }} />
-          </Link>
+            <LogOut size={16} />
+            Secure Logout
+          </button>
         </div>
       </aside>
 
@@ -187,23 +180,22 @@ export default function AdminLayout() {
           <div style={{ flex: 1 }} />
 
           {/* Icons */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <button style={{ position: 'relative', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: '6px' }}>
-              <Bell size={18} />
-              <span style={{
-                position: 'absolute', top: '4px', right: '4px',
-                width: '7px', height: '7px', background: '#ef4444',
-                borderRadius: '50%', border: '1.5px solid #fff'
-              }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginLeft: 'auto' }}>
+            <button style={{ background: 'none', border: 'none', cursor: 'pointer', position: 'relative' }}>
+              <Bell size={18} style={{ color: '#64748b' }} />
             </button>
-            <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: '6px' }}>
-              <Settings size={18} />
-            </button>
-            <img
-              src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=60&q=80"
-              alt="Profile"
-              style={{ width: '34px', height: '34px', borderRadius: '50%', objectFit: 'cover', cursor: 'pointer', border: '2px solid #e2e8f0' }}
-            />
+            <div style={{ width: '1px', height: '24px', background: '#e2e8f0' }}></div>
+            <div style={{
+              width: '32px', height: '32px', borderRadius: '50%',
+              background: '#4c9f70', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: 'white', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer'
+            }}>
+              A
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', cursor: 'pointer' }}>
+              <span style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b' }}>Admin</span>
+            </div>
           </div>
         </header>
 

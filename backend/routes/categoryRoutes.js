@@ -22,17 +22,15 @@ router.route('/:id')
   .delete(protect, authorize('admin'), deleteCategory);
 
 // Subcategory Routes
-router.route('/sub/all')
-  .get(getSubcategories);
-
-router.route('/sub')
+router.route('/subcategories')
+  .get(getSubcategories)
   .post(protect, authorize('admin'), createSubcategory);
 
-router.route('/sub/:id')
+router.route('/subcategories/:id')
   .delete(protect, authorize('admin'), deleteSubcategory);
 
 // Get subcategories for a specific category
-router.route('/:categoryId/sub')
+router.route('/:categoryId/subcategories')
   .get(getSubcategories);
 
 export default router;

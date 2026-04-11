@@ -18,6 +18,12 @@ const brandSchema = new mongoose.Schema({
   description: {
     type: String,
   },
+  categories: [
+    {
+      type: mongoose.Schema.ObjectId,
+      ref: 'Category',
+    }
+  ],
   createdAt: {
     type: Date,
     default: Date.now,

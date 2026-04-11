@@ -19,8 +19,17 @@ const productSchema = new mongoose.Schema({
     default: 'no-photo.jpg',
   },
   category: {
-    type: String,
+    type: mongoose.Schema.ObjectId,
+    ref: 'Category',
     required: [true, 'Please add a category'],
+  },
+  subcategory: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'Subcategory',
+  },
+  brand: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'Brand',
   },
   stock: {
     type: Number,

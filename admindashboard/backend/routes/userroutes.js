@@ -8,7 +8,7 @@ const {
   cancelOrder
 } = require("../controllers/userOrder.controller");
 
-const { protect } = require("../middleware/auth.middleware");
+const { protect } = require("../middleware/authMiddleware");
 
 router.post("/orders", protect, createOrder);
 router.get("/orders", protect, getUserOrders);

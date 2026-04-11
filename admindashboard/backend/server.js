@@ -5,11 +5,10 @@ const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
 const rateLimit = require("express-rate-limit");
-const ordersRoute = require("./routes/order.routes");
 const connectDB = require("./config/db");
 
 // Load env
-dotenv.config({ path: path.resolve(__dirname, "../.env") });
+dotenv.config({ path: path.resolve(__dirname, "./.env") });
 
 // Connect DB
 connectDB();
@@ -21,8 +20,6 @@ app.use(express.json());
 app.use(cors());
 app.use(helmet());
 app.use(morgan("dev"));
-app.use("/api/user", require("./routes/userroutes"));
-app.use("/api/orders", require("./routes/order.routes"));
 
 // Rate limiting
 const limiter = rateLimit({
@@ -32,8 +29,13 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // Routes
+app.use("/api/user", require("./routes/userroutes"));
 app.use("/api/admin", require("./routes/AdminRoutes"));
-app.use("/api/orders", ordersRoute);
+app.use("/api/categories", require("./routes/categoryRoutes"));
+app.use("/api/brands", require("./routes/brandRoutes"));
+app.use("/api/products", require("./routes/productRoutes"));
+app.use("/api/orders", require("./routes/orderRoutes"));
+
 // Test route
 app.get("/", (req, res) => {
   res.send("API Running...");

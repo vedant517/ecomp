@@ -50,7 +50,7 @@ exports.getOrderStats = async (req, res) => {
       success: true,
       total,
       pending,
-      delivered,
+      delivered, 
       cancelled
     });
   } catch (err) {

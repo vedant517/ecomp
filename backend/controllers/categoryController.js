@@ -11,7 +11,7 @@ export const getCategories = async (req, res) => {
   }
 };
 
-// Create a new category (Admin only)
+// Create a new category 
 export const createCategory = async (req, res) => {
   try {
     const { name, description, image } = req.body;
@@ -71,14 +71,13 @@ export const deleteCategory = async (req, res) => {
   }
 };
 
-// --- Subcategory Logic ---
 
 // Get subcategories (optionally filtered by category ID)
 export const getSubcategories = async (req, res) => {
   try {
     let query;
     if (req.params.categoryId) {
-      query = Subcategory.find({ category: req.params.categoryId });
+      query = Subcategory.find({ category: req.params.categoryId }).populate('category', 'name');
     } else {
       query = Subcategory.find().populate('category', 'name');
     }
@@ -101,12 +100,14 @@ export const createSubcategory = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Parent category not found' });
     }
 
-    const subcategory = await Subcategory.create({ 
+    let subcategory = await Subcategory.create({ 
       name, 
       description, 
       category,
       slug 
     });
+    
+    subcategory = await subcategory.populate('category', 'name');
     
     res.status(201).json({ success: true, data: subcategory });
   } catch (error) {
