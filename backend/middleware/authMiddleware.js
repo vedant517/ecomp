@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import Admin from '../models/Admin.js';
 
 export const protect = async (req, res, next) => {
   let token;
@@ -14,7 +15,18 @@ export const protect = async (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = await User.findById(decoded.id);
+    
+    // Try User model first, then fall back to Admin model
+    let user = await User.findById(decoded.id);
+    if (!user) {
+      user = await Admin.findById(decoded.id);
+    }
+
+    if (!user) {
+      return res.status(401).json({ message: 'User not found' });
+    }
+
+    req.user = user;
     next();
   } catch (error) {
     return res.status(401).json({ message: 'Not authorized to access this route' });

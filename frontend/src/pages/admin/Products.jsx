@@ -42,8 +42,8 @@ const Products = () => {
     setDeleteConfirm(null);
   };
 
-  const filtered = products.filter((p) =>
-    p.name.toLowerCase().includes(search.toLowerCase())
+  const filtered = (products || []).filter((p) =>
+    (p?.name || '').toLowerCase().includes((search || '').toLowerCase())
   );
 
   return (
@@ -138,16 +138,18 @@ const Products = () => {
                       <div className="flex items-center gap-5">
                         <div className="w-16 h-16 bg-slate-50 rounded-[1.5rem] overflow-hidden border border-slate-100 group-hover:shadow-xl group-hover:scale-105 transition-all duration-500 flex-shrink-0">
                           <img
-                            src={product.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(product.name)}&background=10b981&color=fff&bold=true`}
+                            src={product?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(product?.name || 'Item')}&background=10b981&color=fff&bold=true`}
                             className="w-full h-full object-cover"
-                            alt={product.name}
+                            alt={product?.name}
                           />
                         </div>
                         <div className="min-w-0">
                           <h4 className="font-black text-slate-900 uppercase text-sm tracking-tight truncate group-hover:text-emerald-500 transition-colors">
-                            {product.name}
+                            {product?.name || 'Unknown Item'}
                           </h4>
-                          <p className="text-[11px] font-bold text-slate-400 truncate mt-1 uppercase tracking-widest">UID: {product._id.slice(-6)}</p>
+                          <p className="text-[11px] font-bold text-slate-400 truncate mt-1 uppercase tracking-widest">
+                            UID: {product?._id ? product._id.slice(-6) : 'N/A'}
+                          </p>
                         </div>
                       </div>
                     </td>
@@ -186,6 +188,7 @@ const Products = () => {
                     <td className="px-8 py-6 text-right">
                       <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 translate-x-4 group-hover:translate-x-0 transition-all duration-300">
                         <button
+                          onClick={() => navigate(`/edit-product/${product._id}`)}
                           className="p-3 bg-white text-slate-400 hover:text-blue-500 hover:bg-blue-50 border border-slate-100 rounded-2xl shadow-sm transition-all"
                           title="Edit Details"
                         >

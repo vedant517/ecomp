@@ -5,12 +5,14 @@ import {
   ChevronRight, Edit, Trash2, Filter, X, Upload, CheckCircle2,
   Bookmark, ShieldCheck, ExternalLink
 } from 'lucide-react';
-import { fetchBrands, createBrand } from '../../features/products/brandSlice';
+import { fetchBrands, createBrand, updateBrand, deleteBrand } from '../../features/products/brandSlice';
 
 const Brands = () => {
   const dispatch = useDispatch();
   const { brands, loading } = useSelector((state) => state.brands);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editId, setEditId] = useState(null);
   const [success, setSuccess] = useState(false);
 
   // Form State
@@ -24,22 +26,51 @@ const Brands = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const result = await dispatch(createBrand({ name, description, logo }));
-    if (createBrand.fulfilled.match(result)) {
+    const brandData = { name, description, logo };
+    
+    let result;
+    if (isEditing) {
+      result = await dispatch(updateBrand({ id: editId, brandData }));
+    } else {
+      result = await dispatch(createBrand(brandData));
+    }
+
+    if (createBrand.fulfilled.match(result) || updateBrand.fulfilled.match(result)) {
       setSuccess(true);
       setTimeout(() => {
         setSuccess(false);
-        setIsModalOpen(false);
-        setName('');
-        setDescription('');
-        setLogo('');
+        closeModal();
       }, 2000);
     }
   };
 
+  const handleEdit = (brand) => {
+    setIsEditing(true);
+    setEditId(brand._id);
+    setName(brand.name);
+    setDescription(brand.description || '');
+    setLogo(brand.logo || '');
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm('Are you sure you want to delete this brand?')) {
+      await dispatch(deleteBrand(id));
+    }
+  };
+
+  const closeModal = () => {
+    setIsEditing(false);
+    setEditId(null);
+    setName('');
+    setDescription('');
+    setLogo('');
+    setIsModalOpen(false);
+  };
+
   return (
     <div className="min-h-screen bg-[#f8fafc] p-4 lg:p-10 space-y-10">
-
+      
       {/* ── Premium Header ── */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
@@ -74,9 +105,9 @@ const Brands = () => {
 
       {/* ── Brand Grid ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-        {brands.map((brand) => (
+        {(brands || []).map((brand) => (
           <div
-            key={brand._id}
+            key={brand?._id}
             className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/40 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 group relative overflow-hidden"
           >
             {/* Background Accent */}
@@ -85,28 +116,34 @@ const Brands = () => {
             <div className="relative z-10 flex flex-col items-center text-center space-y-6">
               <div className="w-24 h-24 bg-white rounded-3xl flex items-center justify-center p-5 shadow-inner border border-slate-50 group-hover:scale-110 transition-transform duration-500">
                 <img
-                  src={brand.logo && (brand.logo.startsWith('http') || brand.logo.startsWith('data:')) ? brand.logo : `https://ui-avatars.com/api/?name=${encodeURIComponent(brand.name)}&background=6366f1&color=fff&bold=true`}
-                  alt={brand.name}
+                  src={brand?.logo && (brand.logo.startsWith('http') || brand.logo.startsWith('data:')) ? brand.logo : `https://ui-avatars.com/api/?name=${encodeURIComponent(brand?.name || 'Partner')}&background=6366f1&color=fff&bold=true`}
+                  alt={brand?.name}
                   className="max-w-full max-h-full object-contain mix-blend-multiply opacity-90 transition-opacity group-hover:opacity-100"
                 />
               </div>
 
               <div className="space-y-2">
-                <h3 className="font-black text-slate-900 text-lg uppercase tracking-tight">{brand.name}</h3>
+                <h3 className="font-black text-slate-900 text-lg uppercase tracking-tight">{brand?.name || 'Global Partner'}</h3>
                 <div className="flex items-center justify-center gap-2">
                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Verified Partner</span>
                 </div>
                 <p className="text-xs text-slate-500 font-medium line-clamp-2 mt-4 px-2 italic">
-                  "{brand.description || 'Global manufacturer specializing in high-end consumer products.'}"
+                  "{brand?.description || 'Global manufacturer specializing in high-end consumer products.'}"
                 </p>
               </div>
 
               <div className="pt-4 flex gap-2 w-full">
-                <button className="flex-1 py-3 bg-slate-50 text-slate-400 rounded-xl hover:bg-emerald-50 hover:text-emerald-600 transition-all">
+                <button 
+                  onClick={() => handleEdit(brand)}
+                  className="flex-1 py-3 bg-slate-50 text-slate-400 rounded-xl hover:bg-emerald-50 hover:text-emerald-600 transition-all"
+                >
                   <Edit size={16} className="mx-auto" />
                 </button>
-                <button className="flex-1 py-3 bg-slate-50 text-slate-400 rounded-xl hover:bg-rose-50 hover:text-rose-600 transition-all">
+                <button 
+                  onClick={() => handleDelete(brand?._id)}
+                  className="flex-1 py-3 bg-slate-50 text-slate-400 rounded-xl hover:bg-rose-50 hover:text-rose-600 transition-all font-bold"
+                >
                   <Trash2 size={16} className="mx-auto" />
                 </button>
               </div>
@@ -131,15 +168,19 @@ const Brands = () => {
         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-xl animate-in fade-in transition-all">
           <div className="bg-white p-12 rounded-[4rem] shadow-[0_32px_128px_rgb(0,0,0,0.2)] max-w-md w-full animate-in zoom-in-95 duration-500 relative">
             <button
-              onClick={() => setIsModalOpen(false)}
+              onClick={closeModal}
               className="absolute top-8 right-8 w-12 h-12 flex items-center justify-center bg-slate-50 text-slate-400 hover:text-slate-600 rounded-2xl transition-all"
             >
               <X size={24} />
             </button>
 
             <div className="mb-10">
-              <h3 className="text-3xl font-black text-slate-900 uppercase tracking-tighter">New Partner</h3>
-              <p className="text-slate-400 font-bold text-sm">Register a new brand in the Dealport ecosystem</p>
+              <h3 className="text-3xl font-black text-slate-900 uppercase tracking-tighter">
+                {isEditing ? 'Update Partner' : 'New Partner'}
+              </h3>
+              <p className="text-slate-400 font-bold text-sm">
+                {isEditing ? 'Modify verified manufacturer details' : 'Register a new brand in the Dealport ecosystem'}
+              </p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -148,7 +189,7 @@ const Brands = () => {
                 <input
                   required value={name} onChange={e => setName(e.target.value)}
                   type="text" placeholder="e.g. Sony Corporation"
-                  className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 transition-all font-bold text-slate-700"
+                  className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 transition-all font-bold text-slate-700 outline-none"
                 />
               </div>
               <div className="space-y-2">
@@ -156,7 +197,7 @@ const Brands = () => {
                 <input
                   value={logo} onChange={e => setLogo(e.target.value)}
                   type="text" placeholder="https://assets.dealport.com/..."
-                  className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 transition-all font-bold text-slate-700"
+                  className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 transition-all font-bold text-slate-700 outline-none"
                 />
               </div>
               <div className="space-y-2">
@@ -164,20 +205,20 @@ const Brands = () => {
                 <textarea
                   value={description} onChange={e => setDescription(e.target.value)}
                   rows="3" placeholder="Core brand values and segment focus..."
-                  className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 transition-all font-bold text-slate-700 resize-none"
+                  className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 transition-all font-bold text-slate-700 resize-none outline-none"
                 />
               </div>
               <button
                 type="submit"
                 className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black py-5 rounded-[2rem] transition-all shadow-xl shadow-emerald-500/30 active:scale-95 text-lg uppercase tracking-tight mt-4"
               >
-                {loading ? 'Authenticating...' : 'Register Partner'}
+                {loading ? 'Authenticating...' : (isEditing ? 'Synchronize' : 'Register Partner')}
               </button>
             </form>
 
             {success && (
               <div className="mt-8 flex items-center justify-center gap-3 text-emerald-500 font-black uppercase tracking-widest text-[10px] animate-bounce">
-                <CheckCircle2 size={18} /> Partner Registered Successfully
+                <CheckCircle2 size={18} /> Partner {isEditing ? 'Updated' : 'Registered'} Successfully
               </div>
             )}
           </div>

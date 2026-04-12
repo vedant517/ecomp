@@ -34,6 +34,34 @@ export const createBrand = createAsyncThunk(
   }
 );
 
+export const updateBrand = createAsyncThunk(
+  'brands/updateBrand',
+  async ({ id, brandData }, thunkAPI) => {
+    try {
+      const response = await axios.put(`${API_URL}/${id}`, brandData, {
+        headers: getAuthHeader(thunkAPI),
+      });
+      return response.data.data;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(error.response?.data?.message || error.message);
+    }
+  }
+);
+
+export const deleteBrand = createAsyncThunk(
+  'brands/deleteBrand',
+  async (id, thunkAPI) => {
+    try {
+      await axios.delete(`${API_URL}/${id}`, {
+        headers: getAuthHeader(thunkAPI),
+      });
+      return id;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(error.response?.data?.message || error.message);
+    }
+  }
+);
+
 const brandSlice = createSlice({
   name: 'brands',
   initialState: {
@@ -55,6 +83,13 @@ const brandSlice = createSlice({
       })
       .addCase(createBrand.fulfilled, (state, action) => {
         state.brands.push(action.payload);
+      })
+      .addCase(updateBrand.fulfilled, (state, action) => {
+        const index = state.brands.findIndex((b) => b._id === action.payload._id);
+        if (index !== -1) state.brands[index] = action.payload;
+      })
+      .addCase(deleteBrand.fulfilled, (state, action) => {
+        state.brands = state.brands.filter((b) => b._id !== action.payload);
       });
   },
 });

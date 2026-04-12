@@ -3,6 +3,8 @@ import productsReducer from '../features/products/productSlice';
 import categoriesReducer from '../features/products/categorySlice';
 import brandReducer from '../features/products/brandSlice';
 import authReducer from '../features/auth/authSlice';
+import { orderApi } from '../features/orders/orderApi';
+import { transactionApi } from '../features/transactions/transactionApi';
 
 export const store = configureStore({
   reducer: {
@@ -10,5 +12,11 @@ export const store = configureStore({
     products: productsReducer,
     categories: categoriesReducer,
     brands: brandReducer,
+    [orderApi.reducerPath]: orderApi.reducer,
+    [transactionApi.reducerPath]: transactionApi.reducer,
   },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware()
+      .concat(orderApi.middleware)
+      .concat(transactionApi.middleware),
 });

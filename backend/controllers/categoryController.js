@@ -129,3 +129,26 @@ export const deleteSubcategory = async (req, res) => {
     res.status(400).json({ success: false, message: error.message });
   }
 };
+
+// Update subcategory
+export const updateSubcategory = async (req, res) => {
+  try {
+    let subcategory = await Subcategory.findById(req.params.id);
+    if (!subcategory) {
+      return res.status(404).json({ success: false, message: 'Subcategory not found' });
+    }
+
+    if (req.body.name) {
+      req.body.slug = req.body.name.toLowerCase().split(' ').join('-');
+    }
+
+    subcategory = await Subcategory.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
+
+    res.status(200).json({ success: true, data: subcategory });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};

@@ -14,7 +14,19 @@ const productSchema = new mongoose.Schema({
     type: Number,
     required: [true, 'Please add a price'],
   },
-  image: {
+  images: [
+    {
+      url: {
+        type: String,
+        required: true
+      },
+      public_id: {
+        type: String,
+        required: true
+      }
+    }
+  ],
+  image: { // Keep for backward compatibility if needed
     type: String,
     default: 'no-photo.jpg',
   },
@@ -31,6 +43,14 @@ const productSchema = new mongoose.Schema({
     type: mongoose.Schema.ObjectId,
     ref: 'Brand',
   },
+  variants: [
+    {
+      name: { type: String, required: true },
+      price: { type: Number, required: true },
+      stock: { type: Number, default: 0 },
+      sku: { type: String }
+    }
+  ],
   stock: {
     type: Number,
     required: [true, 'Please add stock quantity'],
@@ -68,7 +88,7 @@ const productSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.ObjectId,
     ref: 'User',
-    required: true,
+    required: false,
   },
   createdAt: {
     type: Date,

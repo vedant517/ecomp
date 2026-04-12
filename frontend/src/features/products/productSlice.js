@@ -9,13 +9,24 @@ const getAuthHeader = (thunkAPI) => ({
 });
 
 // ─── Thunks ──────────────────────────────────────────────────────────────────
-
 export const fetchProducts = createAsyncThunk(
   'products/fetchProducts',
-  async (params = {}, thunkAPI) => {
+  async (params, thunkAPI) => {
     try {
       const response = await axios.get(API_URL, { params });
-      return response.data;           // { data, total, page, pages, count }
+      return response.data;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(error.response?.data?.message || error.message);
+    }
+  }
+);
+
+export const fetchProductById = createAsyncThunk(
+  'products/fetchProductById',
+  async (id, thunkAPI) => {
+    try {
+      const response = await axios.get(`${API_URL}/${id}`);
+      return response.data.data;
     } catch (error) {
       return thunkAPI.rejectWithValue(error.response?.data?.message || error.message);
     }
@@ -74,6 +85,10 @@ export const updateProduct = createAsyncThunk(
           ...getAuthHeader(thunkAPI),
         },
       });
+      
+      // Auto-refresh the list
+      thunkAPI.dispatch(fetchProducts());
+      
       return response.data.data;
     } catch (error) {
       return thunkAPI.rejectWithValue(error.response?.data?.message || error.message);
@@ -144,6 +159,7 @@ const productSlice = createSlice({
       .addCase(updateProduct.pending, (state) => { state.loading = true; state.error = null; })
       .addCase(updateProduct.fulfilled, (state, action) => {
         state.loading = false;
+        // Optimization: Update the local item immediately
         const idx = state.items.findIndex((p) => p._id === action.payload._id);
         if (idx !== -1) state.items[idx] = action.payload;
         state.successMessage = 'Product updated successfully!';

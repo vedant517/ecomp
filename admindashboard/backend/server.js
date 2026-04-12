@@ -4,7 +4,6 @@ const dotenv = require("dotenv");
 const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
-const rateLimit = require("express-rate-limit");
 const connectDB = require("./config/db");
 
 // Load env
@@ -20,13 +19,6 @@ app.use(express.json());
 app.use(cors());
 app.use(helmet());
 app.use(morgan("dev"));
-
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100
-});
-app.use(limiter);
 
 // Routes
 app.use("/api/user", require("./routes/userroutes"));

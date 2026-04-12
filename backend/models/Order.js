@@ -1,6 +1,10 @@
 import mongoose from 'mongoose';
 
 const orderSchema = new mongoose.Schema({
+  orderId: { // Added for dashboard compatibility
+    type: String,
+    unique: true,
+  },
   user: {
     type: mongoose.Schema.ObjectId,
     ref: 'User',
@@ -20,14 +24,14 @@ const orderSchema = new mongoose.Schema({
     },
   ],
   shippingAddress: {
-    address: { type: String, required: true },
-    city: { type: String, required: true },
-    postalCode: { type: String, required: true },
-    country: { type: String, required: true },
+    address: { type: String },
+    city: { type: String },
+    postalCode: { type: String },
+    country: { type: String },
   },
   paymentMethod: {
     type: String,
-    required: true,
+    default: 'Razorpay'
   },
   paymentResult: {
     id: String,
@@ -70,6 +74,11 @@ const orderSchema = new mongoose.Schema({
   },
   deliveredAt: {
     type: Date,
+  },
+  status: { // Added for dashboard compatibility
+    type: String,
+    enum: ["Pending", "Delivered", "Cancelled", "Shipped"],
+    default: "Pending",
   },
 }, {
   timestamps: true,

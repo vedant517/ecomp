@@ -8,6 +8,9 @@ import AddProduct from './pages/admin/AddProduct';
 import Brands from './pages/admin/Brands';
 import Subcategories from './pages/admin/Subcategories';
 import Products from './pages/admin/Products';
+import Order from './pages/admin/Order';
+import Transactions from './pages/admin/Transactions';
+
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
@@ -38,6 +41,9 @@ function App() {
           <Route path="/brands" element={<Brands />} />
           <Route path="/products" element={<Products />} />
           <Route path="/add-product" element={<AddProduct />} />
+          <Route path="/edit-product/:id" element={<AddProduct />} />
+          <Route path="/orders" element={<Order />} />
+          <Route path="/transactions" element={<Transactions />} />
           <Route path="*" element={<div className="p-8 text-slate-400 text-center">Page under construction</div>} />
         </Route>
 

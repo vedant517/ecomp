@@ -4,13 +4,21 @@ import {
   Plus, Search, Edit, Trash2, Filter, X, 
   Layers, ChevronDown, CheckCircle2, AlertCircle
 } from 'lucide-react';
-import { fetchCategories, fetchSubcategories, createSubcategory } from '../../features/products/categorySlice';
+import { 
+  fetchCategories, 
+  fetchSubcategories, 
+  createSubcategory, 
+  updateSubcategory, 
+  deleteSubcategory 
+} from '../../features/products/categorySlice';
 
 const Subcategories = () => {
   const dispatch = useDispatch();
   const { categories, subcategories, loading } = useSelector((state) => state.categories);
   
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editId, setEditId] = useState(null);
   const [success, setSuccess] = useState(false);
 
   // Form State
@@ -25,17 +33,46 @@ const Subcategories = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const result = await dispatch(createSubcategory({ name, category: categoryId, description }));
-    if (createSubcategory.fulfilled.match(result)) {
+    const subData = { name, category: categoryId, description };
+    
+    let result;
+    if (isEditing) {
+      result = await dispatch(updateSubcategory({ id: editId, subcategoryData: subData }));
+    } else {
+      result = await dispatch(createSubcategory(subData));
+    }
+
+    if (createSubcategory.fulfilled.match(result) || updateSubcategory.fulfilled.match(result)) {
       setSuccess(true);
       setTimeout(() => {
         setSuccess(false);
-        setIsModalOpen(false);
-        setName('');
-        setCategoryId('');
-        setDescription('');
+        closeModal();
       }, 2000);
     }
+  };
+
+  const handleEdit = (sub) => {
+    setIsEditing(true);
+    setEditId(sub._id);
+    setName(sub.name);
+    setCategoryId(sub.category?._id || '');
+    setDescription(sub.description || '');
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm('Are you sure you want to remove this subcategory?')) {
+      await dispatch(deleteSubcategory(id));
+    }
+  };
+
+  const closeModal = () => {
+    setIsEditing(false);
+    setEditId(null);
+    setName('');
+    setCategoryId('');
+    setDescription('');
+    setIsModalOpen(false);
   };
 
   return (
@@ -84,30 +121,40 @@ const Subcategories = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-50">
-            {subcategories.map((sub) => (
-              <tr key={sub._id} className="group hover:bg-slate-50/50 transition-all">
+            {(subcategories || []).map((sub) => (
+              <tr key={sub?._id} className="group hover:bg-slate-50/50 transition-all">
                 <td className="px-10 py-6">
                   <span className="font-bold text-slate-900 uppercase text-sm tracking-tight group-hover:text-emerald-500 transition-colors">
-                    {sub.name}
+                    {sub?.name || 'Unnamed Subcategory'}
                   </span>
                 </td>
                 <td className="px-10 py-6">
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
                     <span className="text-xs font-black text-slate-600 uppercase tracking-tighter">
-                      {sub.category?.name || 'Unlinked'}
+                      {sub?.category?.name || 'Unlinked Root'}
                     </span>
                   </div>
                 </td>
                 <td className="px-10 py-6 max-w-xs truncate">
                   <span className="text-[12px] text-slate-400 font-medium italic">
-                    {sub.description || 'Dedicated segment for specialized inventory distribution.'}
+                    {sub?.description || 'Dedicated segment for specialized inventory distribution.'}
                   </span>
                 </td>
                 <td className="px-10 py-6 text-right">
                    <div className="flex justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button className="p-2 text-slate-300 hover:text-emerald-500 transition-colors"><Edit size={18} /></button>
-                      <button className="p-2 text-slate-300 hover:text-rose-500 transition-colors"><Trash2 size={18} /></button>
+                      <button 
+                        onClick={() => handleEdit(sub)}
+                        className="p-2 text-slate-300 hover:text-emerald-500 transition-colors"
+                      >
+                        <Edit size={18} />
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(sub?._id)}
+                        className="p-2 text-slate-300 hover:text-rose-500 transition-colors"
+                      >
+                        <Trash2 size={18} />
+                      </button>
                    </div>
                 </td>
               </tr>
@@ -131,15 +178,19 @@ const Subcategories = () => {
         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-xl animate-in fade-in transition-all">
           <div className="bg-white p-12 rounded-[4rem] shadow-2xl max-w-md w-full animate-in zoom-in-95 relative">
             <button
-              onClick={() => setIsModalOpen(false)}
+              onClick={closeModal}
               className="absolute top-8 right-8 w-12 h-12 flex items-center justify-center bg-slate-50 text-slate-400 hover:text-slate-600 rounded-2xl transition-all"
             >
               <X size={24} />
             </button>
 
             <div className="mb-10">
-              <h3 className="text-3xl font-black text-slate-900 uppercase tracking-tighter leading-none">Categorize</h3>
-              <p className="text-slate-400 font-bold text-sm mt-2 font-outfit">Create a specialized nexus for your products</p>
+              <h3 className="text-3xl font-black text-slate-900 uppercase tracking-tighter leading-none">
+                {isEditing ? 'Update Link' : 'Categorize'}
+              </h3>
+              <p className="text-slate-400 font-bold text-sm mt-2 font-outfit">
+                {isEditing ? 'Refine your specialized segment' : 'Create a specialized nexus for your products'}
+              </p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -181,7 +232,7 @@ const Subcategories = () => {
                 type="submit"
                 className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black py-5 rounded-[2rem] transition-all shadow-xl shadow-emerald-500/20 active:scale-95 text-lg uppercase tracking-tight mt-4"
               >
-                {loading ? 'Propagating...' : 'Form Classification'}
+                {loading ? 'Propagating...' : (isEditing ? 'Synchronize' : 'Form Classification')}
               </button>
             </form>
 

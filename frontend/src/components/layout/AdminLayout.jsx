@@ -152,55 +152,8 @@ export default function AdminLayout({ setIsAuthenticated }) {
 
       {/* ─── RIGHT COLUMN ─── */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
-
-        {/* Top Navbar */}
-        <header style={{
-          height: '60px', flexShrink: 0,
-          background: '#fff', borderBottom: '1px solid #f1f5f9',
-          display: 'flex', alignItems: 'center',
-          padding: '0 24px', gap: '16px'
-        }}>
-          <span style={{ fontWeight: 700, fontSize: '18px', color: '#0f172a', marginRight: '8px', whiteSpace: 'nowrap' }}>Dashboard</span>
-
-          {/* Search */}
-          <div style={{ position: 'relative', flex: 1, maxWidth: '400px' }}>
-            <Search size={15} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-            <input
-              type="text"
-              placeholder="Search data, users, or reports"
-              style={{
-                width: '100%', padding: '8px 12px 8px 36px',
-                background: '#f8fafc', border: '1px solid #f1f5f9',
-                borderRadius: '20px', fontSize: '12px', color: '#334155',
-                outline: 'none'
-              }}
-            />
-          </div>
-
-          <div style={{ flex: 1 }} />
-
-          {/* Icons */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginLeft: 'auto' }}>
-            <button style={{ background: 'none', border: 'none', cursor: 'pointer', position: 'relative' }}>
-              <Bell size={18} style={{ color: '#64748b' }} />
-            </button>
-            <div style={{ width: '1px', height: '24px', background: '#e2e8f0' }}></div>
-            <div style={{
-              width: '32px', height: '32px', borderRadius: '50%',
-              background: '#4c9f70', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: 'white', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer'
-            }}>
-              A
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', cursor: 'pointer' }}>
-              <span style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b' }}>Admin</span>
-            </div>
-          </div>
-        </header>
-
         {/* Page Content */}
-        <main style={{ flex: 1, overflowY: 'auto', padding: '20px 24px' }}>
+        <main style={{ flex: 1, overflowY: 'auto' }}>
           <Outlet />
         </main>
       </div>
