@@ -5,6 +5,7 @@ import brandReducer from '../features/products/brandSlice';
 import authReducer from '../features/auth/authSlice';
 import { orderApi } from '../features/orders/orderApi';
 import { transactionApi } from '../features/transactions/transactionApi';
+import { customerApi } from '../features/customers/customerApi';
 
 export const store = configureStore({
   reducer: {
@@ -14,9 +15,11 @@ export const store = configureStore({
     brands: brandReducer,
     [orderApi.reducerPath]: orderApi.reducer,
     [transactionApi.reducerPath]: transactionApi.reducer,
+    [customerApi.reducerPath]: customerApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
       .concat(orderApi.middleware)
-      .concat(transactionApi.middleware),
+      .concat(transactionApi.middleware)
+      .concat(customerApi.middleware),
 });

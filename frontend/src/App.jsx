@@ -10,7 +10,7 @@ import Subcategories from './pages/admin/Subcategories';
 import Products from './pages/admin/Products';
 import Order from './pages/admin/Order';
 import Transactions from './pages/admin/Transactions';
-
+import Customers from './pages/admin/Customers';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
@@ -44,6 +44,7 @@ function App() {
           <Route path="/edit-product/:id" element={<AddProduct />} />
           <Route path="/orders" element={<Order />} />
           <Route path="/transactions" element={<Transactions />} />
+          <Route path="/customers" element={<Customers />} />
           <Route path="*" element={<div className="p-8 text-slate-400 text-center">Page under construction</div>} />
         </Route>
 
