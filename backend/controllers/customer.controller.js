@@ -6,24 +6,24 @@ export const getCustomerStats = async (req, res) => {
     const lastWeek = new Date();
     lastWeek.setDate(lastWeek.getDate() - 7);
 
-    // Total Customers
+    // Total Unique Customers (Users who have placed orders)
     const totalCustomers = await Order.aggregate([
-      { $group: { _id: "$userId" } },
+      { $group: { _id: "$user" } },
       { $count: "total" }
     ]);
 
-    // New Customers
+    // New Customers in last 7 days
     const newCustomers = await Order.aggregate([
       { $match: { createdAt: { $gte: lastWeek } } },
-      { $group: { _id: "$userId" } },
+      { $group: { _id: "$user" } },
       { $count: "total" }
     ]);
 
-    // Repeat Customers
+    // Repeat Customers (more than 1 order)
     const repeatCustomers = await Order.aggregate([
       {
         $group: {
-          _id: "$userId",
+          _id: "$user",
           orderCount: { $sum: 1 }
         }
       },
@@ -41,48 +41,63 @@ export const getCustomerStats = async (req, res) => {
     });
 
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
-
-
-// 2. CUSTOMER TABLE (with pagination + search)
+// 2. CUSTOMER TABLE
 export const getAllCustomers = async (req, res) => {
   try {
     let { page = 1, limit = 10, search = "" } = req.query;
-
     page = parseInt(page);
     limit = parseInt(limit);
-
     const skip = (page - 1) * limit;
 
-    // Search filter
-    const matchStage = search
-      ? {
-          customerName: { $regex: search, $options: "i" }
-        }
-      : {};
-
     const customers = await Order.aggregate([
-      { $match: matchStage },
-
+      // Group by user first
       {
         $group: {
-          _id: "$userId",
-          name: { $first: "$customerName" },
+          _id: "$user",
           orderCount: { $sum: 1 },
-          totalSpend: { $sum: "$price" },
+          totalSpend: { $sum: "$totalPrice" },
           lastOrderDate: { $max: "$createdAt" }
         }
       },
-
+      // Join with Users collection to get the name
+      {
+        $lookup: {
+          from: "users",
+          localField: "_id",
+          foreignField: "_id",
+          as: "userDetails"
+        }
+      },
+      { $unwind: "$userDetails" },
+      {
+        $project: {
+          _id: 1,
+          name: "$userDetails.name",
+          email: "$userDetails.email",
+          orderCount: 1,
+          totalSpend: 1,
+          lastOrderDate: 1
+        }
+      },
+      // search filter on name or email
+      {
+        $match: search ? {
+          $or: [
+            { name: { $regex: search, $options: "i" } },
+            { email: { $regex: search, $options: "i" } }
+          ]
+        } : {}
+      },
       // Status Logic
       {
         $addFields: {
           status: {
             $cond: [
-              { $gte: ["$totalSpend", 4000] },
+              { $gte: ["$totalSpend", 500] },
               "VIP",
               {
                 $cond: [
@@ -95,15 +110,13 @@ export const getAllCustomers = async (req, res) => {
           }
         }
       },
-
       { $sort: { totalSpend: -1 } },
       { $skip: skip },
       { $limit: limit }
     ]);
 
-    // Total count for pagination
     const total = await Order.aggregate([
-      { $group: { _id: "$userId" } },
+      { $group: { _id: "$user" } },
       { $count: "total" }
     ]);
 
@@ -118,40 +131,56 @@ export const getAllCustomers = async (req, res) => {
     });
 
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
-
-
 
 // 3. SINGLE CUSTOMER DETAILS
 export const getCustomerById = async (req, res) => {
   try {
     const { userId } = req.params;
+    const mongoose = (await import('mongoose')).default;
 
     const customer = await Order.aggregate([
-      { $match: { userId } },
-
+      { $match: { user: new mongoose.Types.ObjectId(userId) } },
       {
         $group: {
-          _id: "$userId",
-          name: { $first: "$customerName" },
+          _id: "$user",
           orderCount: { $sum: 1 },
-          totalSpend: { $sum: "$price" },
+          totalSpend: { $sum: "$totalPrice" },
           orders: {
             $push: {
               orderId: "$orderId",
-              price: "$price",
+              totalPrice: "$totalPrice",
               status: "$status",
               date: "$createdAt"
             }
           }
         }
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "_id",
+          foreignField: "_id",
+          as: "userDetails"
+        }
+      },
+      { $unwind: "$userDetails" },
+      {
+        $project: {
+          _id: 1,
+          name: "$userDetails.name",
+          email: "$userDetails.email",
+          orderCount: 1,
+          totalSpend: 1,
+          orders: 1
+        }
       }
     ]);
 
     if (!customer.length) {
-      return res.status(404).json({ message: "Customer not found" });
+      return res.status(404).json({ success: false, message: "Customer not found" });
     }
 
     res.json({
@@ -160,6 +189,6 @@ export const getCustomerById = async (req, res) => {
     });
 
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };

@@ -1,8 +1,22 @@
 import Order from "../models/Order.js";
+import Product from "../models/Product.js";
 
 // CREATE ORDER
 export const createOrder = async (req, res) => {
   try {
+    const { orderItems } = req.body;
+
+    if (!orderItems || orderItems.length === 0) {
+      return res.status(400).json({ message: "No order items" });
+    }
+
+    // Update stock for each product
+    for (const item of orderItems) {
+      await Product.findByIdAndUpdate(item.product, {
+        $inc: { stock: -item.qty }
+      });
+    }
+
     const order = await Order.create({
       orderId: "#ORD" + Date.now(),
       user: req.user?.id || "guest",
@@ -36,11 +50,25 @@ export const getUserOrders = async (req, res) => {
 // CANCEL ORDER (USER)
 export const cancelOrder = async (req, res) => {
   try {
-    const order = await Order.findOneAndUpdate(
-      { orderId: req.params.orderId, user: req.user?.id },
-      { status: "Cancelled" },
-      { new: true }
-    );
+    const order = await Order.findOne({ orderId: req.params.orderId, user: req.user?.id });
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    if (order.status === "Cancelled") {
+      return res.status(400).json({ message: "Order is already cancelled" });
+    }
+
+    // Restore stock
+    for (const item of order.orderItems) {
+      await Product.findByIdAndUpdate(item.product, {
+        $inc: { stock: item.qty }
+      });
+    }
+
+    order.status = "Cancelled";
+    await order.save();
 
     res.json({
       success: true,

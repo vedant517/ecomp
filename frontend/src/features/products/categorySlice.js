@@ -24,7 +24,10 @@ export const createCategory = createAsyncThunk(
   async (categoryData, thunkAPI) => {
     try {
       const response = await axios.post(API_URL, categoryData, {
-        headers: getAuthHeader(thunkAPI),
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          ...getAuthHeader(thunkAPI),
+        },
       });
       return response.data.data;
     } catch (error) {
@@ -65,7 +68,10 @@ export const updateCategory = createAsyncThunk(
   async ({ id, categoryData }, thunkAPI) => {
     try {
       const response = await axios.put(`${API_URL}/${id}`, categoryData, {
-        headers: getAuthHeader(thunkAPI),
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          ...getAuthHeader(thunkAPI),
+        },
       });
       return response.data.data;
     } catch (error) {
@@ -127,24 +133,45 @@ const categorySlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
-      .addCase(fetchCategories.pending, (state) => { state.loading = true; })
+      .addCase(fetchCategories.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
       .addCase(fetchCategories.fulfilled, (state, action) => {
         state.loading = false;
-        state.categories = action.payload.data;
+        state.categories = Array.isArray(action.payload.data) ? action.payload.data : [];
       })
       .addCase(fetchCategories.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
       .addCase(fetchSubcategories.fulfilled, (state, action) => {
-        state.subcategories = action.payload.data;
+        state.subcategories = Array.isArray(action.payload.data) ? action.payload.data : [];
+      })
+      .addCase(createCategory.pending, (state) => {
+        state.loading = true;
+        state.error = null;
       })
       .addCase(createCategory.fulfilled, (state, action) => {
+        state.loading = false;
         state.categories.push(action.payload);
       })
+      .addCase(createCategory.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(updateCategory.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
       .addCase(updateCategory.fulfilled, (state, action) => {
+        state.loading = false;
         const index = state.categories.findIndex(c => c._id === action.payload._id);
         if (index !== -1) state.categories[index] = action.payload;
+      })
+      .addCase(updateCategory.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       })
       .addCase(deleteCategory.fulfilled, (state, action) => {
         state.categories = state.categories.filter(c => c._id !== action.payload);

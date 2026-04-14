@@ -2,6 +2,7 @@ import Razorpay from 'razorpay';
 import crypto from 'crypto';
 import Transaction from '../models/Transaction.js';
 import Order from '../models/Order.js';
+import Product from '../models/Product.js';
 
 // Initialize Razorpay instance
 const getRazorpayInstance = () => {
@@ -11,9 +12,7 @@ const getRazorpayInstance = () => {
   });
 };
 
-// @desc    Create a Razorpay order
-// @route   POST /api/payments/create-order
-// @access  Private
+// Create a Razorpay order
 export const createRazorpayOrder = async (req, res) => {
   try {
     const { amount, currency = 'INR', orderId, notes = {} } = req.body;
@@ -24,8 +23,17 @@ export const createRazorpayOrder = async (req, res) => {
 
     const razorpay = getRazorpayInstance();
 
+    // If orderId is provided, we can verify the amount from the database for security
+    let paymentAmount = amount;
+    if (orderId) {
+      const dbOrder = await Order.findById(orderId);
+      if (dbOrder) {
+        paymentAmount = dbOrder.totalPrice;
+      }
+    }
+
     const options = {
-      amount: Math.round(amount * 100), // Razorpay expects amount in paise
+      amount: Math.round(paymentAmount * 100), // Razorpay expects amount in paise
       currency,
       receipt: 'receipt_' + Date.now(),
       notes: {
@@ -42,7 +50,7 @@ export const createRazorpayOrder = async (req, res) => {
       user: req.user?._id,
       order: orderId || undefined,
       razorpayOrderId: razorpayOrder.id,
-      amount,
+      amount: paymentAmount,
       currency,
       status: 'created',
       receipt: options.receipt,
@@ -56,7 +64,7 @@ export const createRazorpayOrder = async (req, res) => {
         amount: razorpayOrder.amount,
         currency: razorpayOrder.currency,
         transactionId: transaction.transactionId,
-        key: process.env.RAZORPAY_KEY_ID, // Frontend needs this to open checkout
+        key: process.env.RAZORPAY_KEY_ID, 
       },
     });
   } catch (error) {
@@ -65,9 +73,7 @@ export const createRazorpayOrder = async (req, res) => {
   }
 };
 
-// @desc    Verify Razorpay payment signature
-// @route   POST /api/payments/verify
-// @access  Private
+// Verify Razorpay payment signature
 export const verifyPayment = async (req, res) => {
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
@@ -130,9 +136,7 @@ export const verifyPayment = async (req, res) => {
   }
 };
 
-// @desc    Get Razorpay key (for frontend)
-// @route   GET /api/payments/key
-// @access  Public
+// Get Razorpay key (for frontend)
 export const getRazorpayKey = (req, res) => {
   res.json({
     success: true,
@@ -140,9 +144,7 @@ export const getRazorpayKey = (req, res) => {
   });
 };
 
-// @desc    Get all transactions (Admin)
-// @route   GET /api/transactions
-// @access  Private/Admin
+// Get all transactions (Admin)
 export const getTransactions = async (req, res) => {
   try {
     const { status, page = 1, limit = 20 } = req.query;
@@ -170,9 +172,7 @@ export const getTransactions = async (req, res) => {
   }
 };
 
-// @desc    Get single transaction
-// @route   GET /api/transactions/:id
-// @access  Private
+// Get single transaction
 export const getTransactionById = async (req, res) => {
   try {
     const transaction = await Transaction.findById(req.params.id)
@@ -189,9 +189,7 @@ export const getTransactionById = async (req, res) => {
   }
 };
 
-// @desc    Get transaction stats (Admin)
-// @route   GET /api/transactions/stats
-// @access  Private/Admin
+// Get transaction stats (Admin)
 export const getTransactionStats = async (req, res) => {
   try {
     const total = await Transaction.countDocuments();
@@ -228,9 +226,7 @@ export const getTransactionStats = async (req, res) => {
   }
 };
 
-// @desc    Initiate refund
-// @route   POST /api/transactions/:id/refund
-// @access  Private/Admin
+// Initiate refund
 export const refundTransaction = async (req, res) => {
   try {
     const transaction = await Transaction.findById(req.params.id);
@@ -256,12 +252,19 @@ export const refundTransaction = async (req, res) => {
     transaction.refundAmount = refundAmount;
     await transaction.save();
 
-    // Update linked order
+    // Update linked order and restore stock
     if (transaction.order) {
-      await Order.findByIdAndUpdate(transaction.order, {
-        status: 'Cancelled',
-        isPaid: false,
-      });
+      const order = await Order.findById(transaction.order);
+      if (order && order.status !== "Cancelled") {
+        for (const item of order.orderItems) {
+            await Product.findByIdAndUpdate(item.product, {
+              $inc: { stock: item.qty }
+            });
+        }
+        order.status = 'Cancelled';
+        order.isPaid = false;
+        await order.save();
+      }
     }
 
     res.json({

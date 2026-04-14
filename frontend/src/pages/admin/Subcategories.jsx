@@ -25,6 +25,9 @@ const Subcategories = () => {
   const [name, setName] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [description, setDescription] = useState('');
+  const [image, setImage] = useState('');
+  const [imageFile, setImageFile] = useState(null);
+  const [preview, setPreview] = useState('');
 
   useEffect(() => {
     dispatch(fetchCategories());
@@ -33,13 +36,21 @@ const Subcategories = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const subData = { name, category: categoryId, description };
+    const formData = new FormData();
+    formData.append('name', name);
+    formData.append('category', categoryId);
+    formData.append('description', description);
+    if (imageFile) {
+        formData.append('image', imageFile);
+    } else if (image) {
+        formData.append('image', image);
+    }
     
     let result;
     if (isEditing) {
-      result = await dispatch(updateSubcategory({ id: editId, subcategoryData: subData }));
+      result = await dispatch(updateSubcategory({ id: editId, subcategoryData: formData }));
     } else {
-      result = await dispatch(createSubcategory(subData));
+      result = await dispatch(createSubcategory(formData));
     }
 
     if (createSubcategory.fulfilled.match(result) || updateSubcategory.fulfilled.match(result)) {
@@ -51,12 +62,25 @@ const Subcategories = () => {
     }
   };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => setPreview(reader.result);
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleEdit = (sub) => {
     setIsEditing(true);
     setEditId(sub._id);
     setName(sub.name);
     setCategoryId(sub.category?._id || '');
     setDescription(sub.description || '');
+    setImage(sub.image || '');
+    setPreview(sub.image || '');
+    setImageFile(null);
     setIsModalOpen(true);
   };
 
@@ -72,6 +96,9 @@ const Subcategories = () => {
     setName('');
     setCategoryId('');
     setDescription('');
+    setImage('');
+    setImageFile(null);
+    setPreview('');
     setIsModalOpen(false);
   };
 
@@ -124,9 +151,18 @@ const Subcategories = () => {
             {(subcategories || []).map((sub) => (
               <tr key={sub?._id} className="group hover:bg-slate-50/50 transition-all">
                 <td className="px-10 py-6">
-                  <span className="font-bold text-slate-900 uppercase text-sm tracking-tight group-hover:text-emerald-500 transition-colors">
-                    {sub?.name || 'Unnamed Subcategory'}
-                  </span>
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-lg border border-slate-100 bg-white overflow-hidden p-1 flex-shrink-0">
+                      <img 
+                        src={sub?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(sub?.name)}&background=6366f1&color=fff&bold=true`} 
+                        alt={sub?.name}
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                    <span className="font-bold text-slate-900 uppercase text-sm tracking-tight group-hover:text-emerald-500 transition-colors">
+                      {sub?.name || 'Unnamed Subcategory'}
+                    </span>
+                  </div>
                 </td>
                 <td className="px-10 py-6">
                   <div className="flex items-center gap-2">
@@ -216,6 +252,21 @@ const Subcategories = () => {
                     {categories.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
                   </select>
                   <ChevronDown className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2">Display Asset (Image)</label>
+                <div className="flex gap-4 items-center">
+                    <div className="w-16 h-16 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center overflow-hidden">
+                        {preview ? (
+                          <img src={preview} className="w-full h-full object-cover" />
+                        ) : <Plus className="text-slate-200" size={24} />}
+                    </div>
+                    <label className="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 text-center cursor-pointer hover:border-emerald-500 hover:text-emerald-500 transition-all">
+                        Upload Image
+                        <input type="file" hidden accept="image/*" onChange={handleFileChange} />
+                    </label>
                 </div>
               </div>
 

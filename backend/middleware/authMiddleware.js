@@ -5,16 +5,20 @@ import Admin from '../models/Admin.js';
 export const protect = async (req, res, next) => {
   let token;
 
-  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-    token = req.headers.authorization.split(' ')[1];
+  const authHeader = req.headers.authorization || req.headers.Authorization;
+  
+  if (authHeader && authHeader.toLowerCase().startsWith('bearer')) {
+    token = authHeader.split(' ')[1];
   }
 
   if (!token) {
+    console.error('No token found in request headers');
     return res.status(401).json({ message: 'Not authorized to access this route' });
   }
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log('Token decoded successfully:', decoded.id);
     
     // Try User model first, then fall back to Admin model
     let user = await User.findById(decoded.id);
@@ -23,12 +27,14 @@ export const protect = async (req, res, next) => {
     }
 
     if (!user) {
+      console.error('User/Admin not found for ID:', decoded.id);
       return res.status(401).json({ message: 'User not found' });
     }
 
     req.user = user;
     next();
   } catch (error) {
+    console.error('JWT Verification Error:', error.message);
     return res.status(401).json({ message: 'Not authorized to access this route' });
   }
 };

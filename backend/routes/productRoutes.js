@@ -11,11 +11,8 @@ import upload from '../middleware/uploadMiddleware.js';
 
 const router = express.Router();
 
-// Support both single "image" and multiple "images"
-const uploadMiddleware = upload.fields([
-  { name: 'image', maxCount: 1 },
-  { name: 'images', maxCount: 10 }
-]);
+// Use upload.any() to handle dynamic field names like variantImage_0, variantImage_1, etc.
+const uploadMiddleware = upload.any();
 
 router
   .route('/')

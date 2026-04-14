@@ -1,5 +1,9 @@
 import express from 'express';
 import {
+  createRazorpayOrder,
+  verifyPayment,
+} from '../controllers/transaction.controller.js';
+import {
   getTransactions,
   getTransactionById,
   getTransactionStats,
@@ -9,12 +13,14 @@ import { protect, authorize } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// Public GET routes for testing
-router.get('/', getTransactions);
-router.get('/stats', getTransactionStats);
-router.get('/:id', getTransactionById);
+// Transaction Flow
+router.post('/create-order', protect, createRazorpayOrder);
+router.post('/verify', protect, verifyPayment);
 
-// Admin-only write routes
+// Admin / Management Routes
+router.get('/', protect, authorize('admin'), getTransactions);
+router.get('/stats', protect, authorize('admin'), getTransactionStats);
+router.get('/:id', protect, getTransactionById);
 router.post('/:id/refund', protect, authorize('admin'), refundTransaction);
 
 export default router;

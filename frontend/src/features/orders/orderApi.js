@@ -1,6 +1,6 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = '/api';
 
 export const orderApi = createApi({
   reducerPath: 'orderApi',
@@ -23,9 +23,9 @@ export const orderApi = createApi({
       providesTags: (result) =>
         result?.data
           ? [
-              ...result.data.map(({ orderId }) => ({ type: 'Order', id: orderId })),
-              { type: 'Order', id: 'LIST' },
-            ]
+            ...result.data.map(({ orderId }) => ({ type: 'Order', id: orderId })),
+            { type: 'Order', id: 'LIST' },
+          ]
           : [{ type: 'Order', id: 'LIST' }],
     }),
     getOrderStats: builder.query({

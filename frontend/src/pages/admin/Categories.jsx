@@ -1,18 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
-  Search, Bell, Sun, Plus, MoreVertical,
+  Search, Plus, MoreVertical,
   ChevronRight, Filter, Edit, Trash2, ArrowLeft, ArrowRight
 } from 'lucide-react';
 import { fetchCategories, createCategory, updateCategory, deleteCategory } from '../../features/products/categorySlice';
 import { fetchProducts } from '../../features/products/productSlice';
 import { useNavigate } from 'react-router-dom';
-import { X, CheckCircle2 } from 'lucide-react';
+import { X, CheckCircle2, AlertCircle } from 'lucide-react';
 
 const Categories = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { categories, loading } = useSelector((state) => state.categories);
+  const { categories, loading, error } = useSelector((state) => state.categories);
   const { items: products } = useSelector((state) => state.products);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -20,10 +20,11 @@ const Categories = () => {
   const [editId, setEditId] = useState(null);
   const [success, setSuccess] = useState(false);
 
-  // Form State
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [image, setImage] = useState('');
+  const [imageFile, setImageFile] = useState(null);
+  const [preview, setPreview] = useState('');
 
   const [activeTab, setActiveTab] = useState('All Product');
 
@@ -34,21 +35,34 @@ const Categories = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const categoryData = { name, description, image };
+    const formData = new FormData();
+    formData.append('name', name);
+    formData.append('description', description);
+    if (imageFile) {
+        formData.append('image', imageFile);
+    } else if (image) {
+        formData.append('image', image);
+    }
 
     let result;
     if (isEditing) {
-      result = await dispatch(updateCategory({ id: editId, categoryData }));
+      result = await dispatch(updateCategory({ id: editId, categoryData: formData }));
     } else {
-      result = await dispatch(createCategory(categoryData));
+      result = await dispatch(createCategory(formData));
     }
-
     if (createCategory.fulfilled.match(result) || updateCategory.fulfilled.match(result)) {
       setSuccess(true);
-      setTimeout(() => {
-        setSuccess(false);
-        closeModal();
-      }, 2000);
+      setTimeout(() => { setSuccess(false); closeModal(); }, 2000);
+    }
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => setPreview(reader.result);
+      reader.readAsDataURL(file);
     }
   };
 
@@ -58,6 +72,8 @@ const Categories = () => {
     setName(category.name);
     setDescription(category.description || '');
     setImage(category.image || '');
+    setPreview(category.image || '');
+    setImageFile(null);
     setIsModalOpen(true);
   };
 
@@ -73,154 +89,211 @@ const Categories = () => {
     setName('');
     setDescription('');
     setImage('');
+    setImageFile(null);
+    setPreview('');
     setIsModalOpen(false);
   };
 
   const tabs = [
     { name: 'All Product', count: products.length },
     { name: 'Categories', count: categories.length },
-    { name: 'Featured' },
-    { name: 'Archived' }
   ];
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] p-6 lg:p-10 font-sans text-slate-800">
+    <div className="flex-1 min-w-0" style={{ display: 'flex', flexDirection: 'column', gap: '24px', padding: '24px' }}>
 
       {/* ── Discover Section ── */}
-      <div className="mb-8">
-        <div className="flex justify-between items-center mb-5">
-          <h2 className="text-[20px] font-bold text-[#1f2937]">Discover</h2>
-          <div className="flex gap-3">
+      <div>
+        {/* Header row */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+          <h2 style={{ fontSize: '20px', fontWeight: 800, color: '#1f2937', margin: 0 }}>Discover</h2>
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
             <button
               onClick={() => setIsModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-[#4c9f70] hover:bg-emerald-600 text-white font-medium rounded-lg text-sm transition-colors shadow-sm"
+              style={{
+                display: 'flex', alignItems: 'center', gap: '8px',
+                padding: '8px 16px', background: '#4c9f70', color: 'white',
+                border: 'none', borderRadius: '10px', fontSize: '13px',
+                fontWeight: 600, cursor: 'pointer',
+              }}
             >
-              <div className="w-4 h-4 rounded-full border border-white flex items-center justify-center">
+              <div style={{ width: '16px', height: '16px', borderRadius: '50%', border: '1.5px solid white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Plus size={10} strokeWidth={3} />
               </div>
               Create Category
             </button>
             <button
               onClick={() => navigate('/add-product')}
-              className="flex items-center gap-1 px-4 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium rounded-lg text-sm transition-colors shadow-sm"
+              style={{
+                display: 'flex', alignItems: 'center', gap: '6px',
+                padding: '8px 16px', background: 'white', color: '#374151',
+                border: '1px solid #e2e8f0', borderRadius: '10px', fontSize: '13px',
+                fontWeight: 600, cursor: 'pointer',
+              }}
             >
-              Add Product <Plus size={14} className="text-slate-500 ml-1" />
+              Add Product <Plus size={14} color="#94a3b8" />
             </button>
           </div>
         </div>
 
-        <div className="relative">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full md:pr-14">
+        {/* Category Cards Grid */}
+        <div style={{ position: 'relative' }}>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+            gap: '12px',
+            paddingRight: '48px',
+          }}>
             {(categories.length > 0 ? categories : []).slice(0, 8).map((cat, idx) => (
               <div
                 key={cat._id || idx}
                 onClick={() => handleEdit(cat)}
-                className="flex items-center gap-4 bg-white p-3.5 rounded-xl border border-slate-100 shadow-sm hover:border-emerald-500/30 hover:shadow-md transition-all cursor-pointer group"
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '12px',
+                  background: 'white', padding: '14px', borderRadius: '12px',
+                  border: '1px solid #f1f5f9', cursor: 'pointer',
+                  transition: 'all 0.15s',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#a7f3d0'; e.currentTarget.style.boxShadow = '0 2px 12px rgba(0,0,0,0.06)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#f1f5f9'; e.currentTarget.style.boxShadow = 'none'; }}
               >
-                <div className="w-[45px] h-[45px] rounded border border-slate-100 bg-white flex items-center justify-center p-1.5 flex-shrink-0 relative overflow-hidden group-hover:scale-110 transition-transform">
+                <div style={{
+                  width: '44px', height: '44px', flexShrink: 0,
+                  borderRadius: '8px', border: '1px solid #f1f5f9',
+                  background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  overflow: 'hidden', padding: '4px',
+                }}>
                   <img
-                    src={cat.image && (cat.image.startsWith('http') || cat.image.startsWith('data:')) ? cat.image : `https://ui-avatars.com/api/?name=${encodeURIComponent(cat.name)}&background=10b981&color=fff&bold=true`}
+                    src={cat.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(cat.name)}&background=10b981&color=fff&bold=true`}
                     alt={cat.name}
-                    className="w-full h-full object-contain"
+                    onError={(e) => { e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(cat.name)}&background=10b981&color=fff&bold=true` }}
+                    style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                   />
                 </div>
-                <div className="flex flex-col">
-                  <span className="font-bold text-[13px] text-slate-800 uppercase tracking-tight">{cat.name}</span>
-                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Manage Assets</span>
+                <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                  <span style={{ fontSize: '13px', fontWeight: 800, color: '#1e293b', textTransform: 'uppercase', letterSpacing: '-0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cat.name}</span>
+                  <span style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Manage Assets</span>
                 </div>
               </div>
             ))}
           </div>
-          <button className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 w-[34px] h-[34px] bg-white rounded-full border border-slate-200 items-center justify-center text-slate-500 hover:text-emerald-600 transition-colors shadow-sm">
+          <button style={{
+            position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)',
+            width: '34px', height: '34px', background: 'white', borderRadius: '50%',
+            border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer', color: '#64748b',
+          }}>
             <ChevronRight size={18} />
           </button>
         </div>
       </div>
 
       {/* ── Table Section ── */}
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm mt-10">
+      <div style={{ background: 'white', borderRadius: '16px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
 
-        {/* Table Top Toolbar */}
-        <div className="px-6 py-4 flex flex-col xl:flex-row justify-between items-center gap-4">
-          <div className="flex items-center gap-6 w-full xl:w-auto">
+        {/* Toolbar */}
+        <div style={{ padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', borderBottom: '1px solid #f8fafc' }}>
+          {/* Tabs */}
+          <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
             {tabs.map((tab) => (
               <button
                 key={tab.name}
                 onClick={() => setActiveTab(tab.name)}
-                className={`text-[13px] font-bold pb-1 transition-colors ${activeTab === tab.name
-                  ? 'text-[#2c7a4b] bg-emerald-50 px-3 py-1.5 rounded-md'
-                  : 'text-slate-500 hover:text-slate-700'
-                  }`}
+                style={{
+                  padding: '6px 14px', fontSize: '13px', fontWeight: 700,
+                  borderRadius: '8px', border: 'none', cursor: 'pointer',
+                  background: activeTab === tab.name ? '#f0fdf4' : 'transparent',
+                  color: activeTab === tab.name ? '#2c7a4b' : '#64748b',
+                  transition: 'all 0.15s',
+                }}
               >
-                {tab.name} {tab.count !== undefined && <span className="opacity-60">({tab.count})</span>}
+                {tab.name} {tab.count !== undefined && <span style={{ opacity: 0.6 }}>({tab.count})</span>}
               </button>
             ))}
           </div>
 
-          <div className="flex items-center gap-2 w-full xl:w-auto">
-            <div className="relative w-full md:w-[240px]">
+          {/* Search + Filter */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ position: 'relative' }}>
               <input
                 type="text"
                 placeholder="Search catalog..."
-                className="w-full pl-4 pr-9 py-2 bg-slate-50 border border-slate-100 rounded-md text-[13px] focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                style={{
+                  padding: '8px 36px 8px 14px', background: '#f8fafc',
+                  border: '1px solid #f1f5f9', borderRadius: '8px',
+                  fontSize: '13px', outline: 'none', width: '220px',
+                }}
               />
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+              <Search size={14} color="#94a3b8" style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
             </div>
-            <button className="w-8 h-8 flex items-center justify-center bg-white border border-slate-200 rounded-md text-slate-500 hover:bg-slate-50">
+            <button style={{
+              width: '34px', height: '34px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer', color: '#64748b',
+            }}>
               <Filter size={14} />
             </button>
           </div>
         </div>
 
-        {/* Table Data */}
-        <div className="overflow-x-auto px-6 pb-6">
-          <table className="w-full text-left border-collapse">
+        {/* Table */}
+        <div style={{ overflowX: 'auto', padding: '0 24px 24px' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
-              <tr className="bg-slate-50/50 uppercase text-[11px] tracking-wider text-slate-400">
-                <th className="px-4 py-4 rounded-l-lg w-10 text-center"><input type="checkbox" className="w-4 h-4 rounded border-slate-300" /></th>
-                <th className="px-3 py-4 font-black">Category Identity</th>
-                <th className="px-3 py-4 font-black text-center">Description</th>
-                <th className="px-3 py-4 font-black text-center">Last Modified</th>
-                <th className="px-3 py-4 font-black text-right rounded-r-lg">Manage</th>
+              <tr style={{ background: '#f8fafc', borderBottom: '1px solid #f1f5f9' }}>
+                {[
+                  { label: <input type="checkbox" style={{ width: '16px', height: '16px' }} />, align: 'center', w: '40px' },
+                  { label: 'Category Identity', align: 'left' },
+                  { label: 'Description', align: 'center' },
+                  { label: 'Last Modified', align: 'center' },
+                  { label: 'Manage', align: 'right' },
+                ].map((h, i) => (
+                  <th key={i} style={{
+                    padding: '14px 12px', fontSize: '11px', fontWeight: 800,
+                    color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em',
+                    textAlign: h.align, width: h.w,
+                  }}>{h.label}</th>
+                ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-50 text-[13px]">
-            {(categories || []).map((cat, index) => (
-                <tr key={cat._id} className="group hover:bg-slate-50/50 transition-colors">
-                  <td className="px-4 py-4 text-center text-slate-400 font-bold">{index + 1}</td>
-                  <td className="px-3 py-4">
-                    <div className="flex items-center gap-4">
-                      <div className="w-[40px] h-[40px] rounded-lg border border-slate-100 bg-white flex items-center justify-center p-1 flex-shrink-0 shadow-sm">
+            <tbody>
+              {(categories || []).map((cat, index) => (
+                <tr key={cat._id} style={{ borderBottom: '1px solid #f8fafc', transition: 'background 0.1s' }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = '#fafafa'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                >
+                  <td style={{ padding: '14px 12px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: '#94a3b8' }}>{index + 1}</td>
+                  <td style={{ padding: '14px 12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div style={{ width: '40px', height: '40px', borderRadius: '10px', border: '1px solid #f1f5f9', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px', flexShrink: 0 }}>
                         <img
                           src={cat.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(cat.name)}&background=10b981&color=fff&bold=true`}
                           alt={cat.name}
-                          className="w-full h-full object-contain"
+                          onError={(e) => { e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(cat.name)}&background=10b981&color=fff&bold=true` }}
+                          style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                         />
                       </div>
-                      <div className="flex flex-col">
-                        <span className="font-bold text-slate-800 uppercase tracking-tight">{cat.name}</span>
-                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest italic">{cat.slug}</span>
+                      <div>
+                        <div style={{ fontSize: '13px', fontWeight: 800, color: '#1e293b', textTransform: 'uppercase' }}>{cat.name}</div>
+                        <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', fontStyle: 'italic' }}>{cat.slug}</div>
                       </div>
                     </div>
                   </td>
-                  <td className="px-3 py-4 text-center text-slate-500 font-medium italic truncate max-w-[200px]">
+                  <td style={{ padding: '14px 12px', textAlign: 'center', fontSize: '13px', color: '#64748b', fontStyle: 'italic', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {cat.description || 'Global taxonomy segment for product organization.'}
                   </td>
-                  <td className="px-3 py-4 text-center font-bold text-slate-700">
+                  <td style={{ padding: '14px 12px', textAlign: 'center', fontSize: '13px', fontWeight: 700, color: '#374151' }}>
                     {new Date(cat.updatedAt || Date.now()).toLocaleDateString('en-GB').replace(/\//g, '-')}
                   </td>
-                  <td className="px-3 py-4">
-                    <div className="flex items-center justify-end gap-2">
-                      <button
-                        onClick={() => handleEdit(cat)}
-                        className="w-8 h-8 flex items-center justify-center bg-slate-50 text-slate-400 rounded-lg hover:bg-emerald-50 hover:text-emerald-600 transition-all"
-                      >
+                  <td style={{ padding: '14px 12px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '6px' }}>
+                      <button onClick={() => handleEdit(cat)} style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', color: '#94a3b8', border: 'none', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.15s' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = '#f0fdf4'; e.currentTarget.style.color = '#059669'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.color = '#94a3b8'; }}>
                         <Edit size={14} />
                       </button>
-                      <button
-                        onClick={() => handleDelete(cat._id)}
-                        className="w-8 h-8 flex items-center justify-center bg-slate-50 text-slate-400 rounded-lg hover:bg-rose-50 hover:text-rose-600 transition-all font-bold"
-                      >
+                      <button onClick={() => handleDelete(cat._id)} style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', color: '#94a3b8', border: 'none', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.15s' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = '#fff1f2'; e.currentTarget.style.color = '#e11d48'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.color = '#94a3b8'; }}>
                         <Trash2 size={14} />
                       </button>
                     </div>
@@ -231,92 +304,86 @@ const Categories = () => {
           </table>
 
           {loading && categories.length === 0 && (
-            <div className="py-20 flex flex-col items-center justify-center gap-4">
-              <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
-              <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Hydrating Categories...</span>
+            <div style={{ padding: '60px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+              <div style={{ width: '40px', height: '40px', border: '4px solid #d1fae5', borderTopColor: '#059669', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+              <span style={{ fontSize: '11px', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.15em' }}>Hydrating Categories...</span>
+              <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
             </div>
           )}
         </div>
 
         {/* Pagination Footer */}
-        <div className="px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4 border-t border-slate-100">
-          <button className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded text-[13px] font-medium text-slate-700 hover:bg-slate-50 transition-colors shadow-sm">
+        <div style={{ padding: '14px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f1f5f9', flexWrap: 'wrap', gap: '12px' }}>
+          <button style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 14px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', fontWeight: 600, color: '#374151', cursor: 'pointer' }}>
             <ArrowLeft size={14} /> Previous
           </button>
-
-          <div className="flex gap-1.5 items-center">
-            <button className="w-[30px] h-[30px] flex items-center justify-center rounded bg-[#a4dcbb] text-[#1c6439] font-bold text-[13px]">1</button>
+          <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+            <button style={{ width: '30px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '6px', background: '#a4dcbb', color: '#1c6439', fontWeight: 800, fontSize: '13px', border: 'none', cursor: 'pointer' }}>1</button>
             {[2, 3, 4, 5].map((num) => (
-              <button key={num} className="w-[30px] h-[30px] flex items-center justify-center rounded bg-white border border-slate-200 text-slate-500 hover:border-[#4c9f70] hover:text-[#4c9f70] transition-colors font-medium text-[13px]">
-                {num}
-              </button>
+              <button key={num} style={{ width: '30px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '6px', background: 'white', border: '1px solid #e2e8f0', color: '#64748b', fontWeight: 600, fontSize: '13px', cursor: 'pointer' }}>{num}</button>
             ))}
-            <span className="w-[30px] h-[30px] flex items-center justify-center text-slate-400 font-bold tracking-widest text-[13px]">...</span>
-            <button className="w-[30px] h-[30px] flex items-center justify-center rounded bg-white border border-slate-200 text-slate-500 hover:border-[#4c9f70] hover:text-[#4c9f70] transition-colors font-medium text-[13px]">24</button>
+            <span style={{ color: '#94a3b8', fontWeight: 700 }}>...</span>
+            <button style={{ width: '30px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '6px', background: 'white', border: '1px solid #e2e8f0', color: '#64748b', fontWeight: 600, fontSize: '13px', cursor: 'pointer' }}>24</button>
           </div>
-
-          <button className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded text-[13px] font-medium text-slate-700 hover:bg-slate-50 transition-colors shadow-sm">
+          <button style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 14px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px', fontWeight: 600, color: '#374151', cursor: 'pointer' }}>
             Next <ArrowRight size={14} />
           </button>
         </div>
       </div>
 
-      {/* ── Modal Overlay ── */}
+      {/* ── Modal ── */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-xl animate-in fade-in transition-all">
-          <div className="bg-white p-12 rounded-[3.5rem] shadow-2xl max-w-md w-full animate-in zoom-in-95 duration-500 relative">
-            <button
-              onClick={closeModal}
-              className="absolute top-8 right-8 w-10 h-10 flex items-center justify-center bg-slate-50 text-slate-400 hover:text-slate-600 rounded-xl transition-all"
-            >
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(8px)' }}>
+          <div style={{ background: 'white', padding: '48px', borderRadius: '32px', boxShadow: '0 32px 80px rgba(0,0,0,0.2)', maxWidth: '440px', width: '100%', position: 'relative' }}>
+            <button onClick={closeModal} style={{ position: 'absolute', top: '24px', right: '24px', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', color: '#94a3b8', border: 'none', borderRadius: '12px', cursor: 'pointer' }}>
               <X size={20} />
             </button>
-
-            <div className="mb-10 text-center">
-              <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">
+            <div style={{ marginBottom: '32px', textAlign: 'center' }}>
+              <h3 style={{ fontSize: '22px', fontWeight: 900, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '-0.02em', margin: 0 }}>
                 {isEditing ? 'Modify Category' : 'New Main Category'}
               </h3>
-              <p className="text-slate-400 font-bold text-xs uppercase tracking-widest mt-2 px-10">
+              <p style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: '8px' }}>
                 {isEditing ? 'Updating Taxonomy Node' : 'Initialize a new global product classification'}
               </p>
             </div>
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '10px', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.12em', paddingLeft: '4px' }}>Display Name</label>
+                <input required value={name} onChange={(e) => setName(e.target.value)} type="text" placeholder="e.g. Computing"
+                  style={{ width: '100%', padding: '14px 20px', background: '#f8fafc', border: '1px solid #f1f5f9', borderRadius: '16px', fontSize: '14px', fontWeight: 600, color: '#1e293b', outline: 'none', boxSizing: 'border-box' }} />
+              </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2">Display Name</label>
-                <input
-                  required value={name} onChange={e => setName(e.target.value)}
-                  type="text" placeholder="e.g. Computing"
-                  className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 transition-all font-bold text-slate-700 outline-none"
-                />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '10px', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.12em', paddingLeft: '4px' }}>Category Identity Image</label>
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                    <div style={{ width: '60px', height: '60px', borderRadius: '12px', background: '#f8fafc', border: '1px dotted #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                        {preview ? (
+                          <img 
+                            src={preview && (preview.startsWith('http') || preview.startsWith('data:')) ? preview : `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=10b981&color=fff&bold=true`} 
+                            onError={(e) => { e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=10b981&color=fff&bold=true` }}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                          />
+                        ) : <Plus size={20} color="#cbd5e1" />}
+                    </div>
+                    <label style={{ flex: 1, padding: '10px 16px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', fontSize: '12px', fontWeight: 700, color: '#475569', cursor: 'pointer', textAlign: 'center' }}>
+                        Choose Vector / Image
+                        <input type="file" hidden accept="image/*" onChange={handleFileChange} />
+                    </label>
+                </div>
               </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2">Icon Overlay / Identity (URL)</label>
-                <input
-                  value={image} onChange={e => setImage(e.target.value)}
-                  type="text" placeholder="https://assets.store.com/category-icon.png"
-                  className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 transition-all font-bold text-slate-700 outline-none"
-                />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '10px', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.12em', paddingLeft: '4px' }}>Global Segment Focus</label>
+                <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} placeholder="Define the scope of this global category segment..."
+                  style={{ width: '100%', padding: '14px 20px', background: '#f8fafc', border: '1px solid #f1f5f9', borderRadius: '16px', fontSize: '14px', fontWeight: 600, color: '#1e293b', outline: 'none', resize: 'none', boxSizing: 'border-box' }} />
               </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2">Global Segment Focus</label>
-                <textarea
-                  value={description} onChange={e => setDescription(e.target.value)}
-                  rows="3" placeholder="Define the scope of this global category segment..."
-                  className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 transition-all font-bold text-slate-700 resize-none outline-none"
-                />
-              </div>
-              <button
-                type="submit"
-                className="w-full bg-slate-900 hover:bg-slate-800 text-white font-black py-5 rounded-3xl transition-all shadow-xl shadow-slate-900/10 active:scale-95 text-xs uppercase tracking-widest mt-4"
-              >
-                {loading ? 'Processing...' : (isEditing ? 'Synchronize Data' : 'Initialize Category')}
+              <button type="submit" disabled={loading} style={{ width: '100%', background: '#0f172a', color: 'white', border: 'none', borderRadius: '20px', padding: '18px', fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.12em', cursor: loading ? 'not-allowed' : 'pointer', marginTop: '8px', opacity: loading ? 0.7 : 1 }}>
+                {loading ? 'Processing...' : (isEditing ? 'Save Changes' : 'Initialize Category')}
               </button>
             </form>
-
-            {success && (
-              <div className="mt-8 flex items-center justify-center gap-3 text-emerald-500 font-black uppercase tracking-widest text-[10px] animate-bounce">
-                <CheckCircle2 size={16} /> Data Persisted Successfully
+            {(success || error) && (
+              <div style={{ marginTop: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: success ? '#059669' : '#e11d48', fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.12em', textAlign: 'center' }}>
+                {success ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />} 
+                {success ? 'Data Persisted Successfully' : (error || 'Failed to sync data')}
               </div>
             )}
           </div>

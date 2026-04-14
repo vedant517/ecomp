@@ -48,13 +48,22 @@ const productSchema = new mongoose.Schema({
       name: { type: String, required: true },
       price: { type: Number, required: true },
       stock: { type: Number, default: 0 },
-      sku: { type: String }
+      sku: { type: String },
+      image: { type: String }
     }
   ],
   stock: {
     type: Number,
     required: [true, 'Please add stock quantity'],
     default: 0,
+  },
+  isFeatured: {
+    type: Boolean,
+    default: false,
+  },
+  taxIncluded: {
+    type: Boolean,
+    default: true,
   },
   ratings: {
     type: Number,
@@ -95,6 +104,13 @@ const productSchema = new mongoose.Schema({
     default: Date.now,
   },
 });
+
+productSchema.index({ category: 1 });
+productSchema.index({ subcategory: 1 });
+productSchema.index({ brand: 1 });
+productSchema.index({ price: 1 });
+productSchema.index({ name: 'text', description: 'text' });
+productSchema.index({ createdAt: -1 });
 
 const Product = mongoose.model('Product', productSchema);
 export default Product;

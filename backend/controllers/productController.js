@@ -23,7 +23,8 @@ export const getProducts = async (req, res) => {
       .populate('subcategory', 'name')
       .sort(sortOpt)
       .skip(skip)
-      .limit(Number(limit));
+      .limit(Number(limit))
+      .lean();
 
     res.status(200).json({
       success: true,
@@ -42,7 +43,7 @@ export const createProduct = async (req, res) => {
   try {
     const { name, description, price, discountPrice, category, subcategory, brand, stock, variants } = req.body;
 
-    if (!name || !description || !price || !category || !stock) {
+    if (!name || !description || price === undefined || !category || stock === undefined) {
       return res.status(400).json({
         success: false,
         message: 'Please provide name, description, price, category and stock',
@@ -59,27 +60,42 @@ export const createProduct = async (req, res) => {
       brand,
       stock: Number(stock),
       variants: variants ? (typeof variants === 'string' ? JSON.parse(variants) : variants) : [],
+      isFeatured: req.body.isFeatured === 'true',
+      taxIncluded: req.body.taxIncluded === 'true',
       user: req.user ? req.user.id : undefined,
     };
 
-    // Handle images from upload.fields
-    if (req.files) {
-      if (req.files.image && req.files.image.length > 0) {
-        productData.image = req.files.image[0].path;
-        if (!productData.images) productData.images = [];
-        productData.images.push({
-          url: req.files.image[0].path,
-          public_id: req.files.image[0].filename || Date.now().toString()
-        });
-      }
-      if (req.files.images && req.files.images.length > 0) {
-        const additionalImages = req.files.images.map(file => ({
-          url: file.path,
-          public_id: file.filename || Date.now().toString()
-        }));
-        if (!productData.images) productData.images = [];
-        productData.images = [...productData.images, ...additionalImages];
-        if (!productData.image) productData.image = productData.images[0].url;
+    // Clean up empty strings for optional references to avoid Mongoose CastError
+    if (productData.brand === '') delete productData.brand;
+    if (productData.subcategory === '') delete productData.subcategory;
+
+    // Handle images from upload.any()
+    if (req.files && req.files.length > 0) {
+      req.files.forEach(file => {
+        if (file.fieldname === 'image') {
+          productData.image = file.path;
+          if (!productData.images) productData.images = [];
+          productData.images.push({
+            url: file.path,
+            public_id: file.filename || Date.now().toString()
+          });
+        } else if (file.fieldname === 'images') {
+          if (!productData.images) productData.images = [];
+          productData.images.push({
+            url: file.path,
+            public_id: file.filename || Date.now().toString()
+          });
+        } else if (file.fieldname.startsWith('variantImage_')) {
+          const idx = parseInt(file.fieldname.split('_')[1]);
+          if (productData.variants && productData.variants[idx]) {
+            productData.variants[idx].image = file.path;
+          }
+        }
+      });
+
+      // Ensure primary image is set
+      if (!productData.image && productData.images && productData.images.length > 0) {
+        productData.image = productData.images[0].url;
       }
     }
 
@@ -96,7 +112,8 @@ export const getProduct = async (req, res) => {
     const product = await Product.findById(req.params.id)
       .populate('category', 'name')
       .populate('brand', 'name logo')
-      .populate('subcategory', 'name');
+      .populate('subcategory', 'name')
+      .lean();
     if (!product) {
       return res.status(404).json({ success: false, message: 'Product not found' });
     }
@@ -119,30 +136,46 @@ export const updateProduct = async (req, res) => {
     if (updateData.price) updateData.price = Number(updateData.price);
     if (updateData.discountPrice) updateData.discountPrice = Number(updateData.discountPrice);
     if (updateData.stock) updateData.stock = Number(updateData.stock);
+    if (updateData.isFeatured) updateData.isFeatured = updateData.isFeatured === 'true';
+    if (updateData.taxIncluded) updateData.taxIncluded = updateData.taxIncluded === 'true';
     
     // Parse variants
     if (updateData.variants && typeof updateData.variants === 'string') {
       updateData.variants = JSON.parse(updateData.variants);
     }
 
-    // Handle images from upload.fields
-    if (req.files) {
-      if (req.files.image && req.files.image.length > 0) {
-        updateData.image = req.files.image[0].path;
-        if (!updateData.images) updateData.images = [];
-        updateData.images.push({
-          url: req.files.image[0].path,
-          public_id: req.files.image[0].filename || Date.now().toString()
-        });
-      }
-      if (req.files.images && req.files.images.length > 0) {
-        const additionalImages = req.files.images.map(file => ({
-          url: file.path,
-          public_id: file.filename || Date.now().toString()
-        }));
-        if (!updateData.images) updateData.images = [];
-        updateData.images = [...updateData.images, ...additionalImages];
-        if (!updateData.image) updateData.image = updateData.images[0].url;
+    // Clean up empty strings for optional references to avoid Mongoose CastError
+    if (updateData.brand === '') updateData.brand = null;
+    if (updateData.subcategory === '') updateData.subcategory = null;
+
+    // Handle images from upload.any()
+    if (req.files && req.files.length > 0) {
+      req.files.forEach(file => {
+        if (file.fieldname === 'image') {
+          updateData.image = file.path;
+          if (!updateData.images) updateData.images = [];
+          updateData.images.push({
+            url: file.path,
+            public_id: file.filename || Date.now().toString()
+          });
+        } else if (file.fieldname === 'images') {
+          if (!updateData.images) updateData.images = [];
+          updateData.images.push({
+            url: file.path,
+            public_id: file.filename || Date.now().toString()
+          });
+        } else if (file.fieldname.startsWith('variantImage_')) {
+          const idx = parseInt(file.fieldname.split('_')[1]);
+          if (updateData.variants && updateData.variants[idx]) {
+            updateData.variants[idx].image = file.path;
+          }
+        }
+      });
+
+      // Update primary image if new one uploaded
+      if (!updateData.image && updateData.images && updateData.images.length > 0) {
+        // Only set if not already present or if we want to force update
+        // (usually if a new main image was uploaded via 'image' field, it's already set)
       }
     }
 

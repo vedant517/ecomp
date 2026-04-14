@@ -15,6 +15,10 @@ const subcategorySchema = new mongoose.Schema({
     ref: 'Category',
     required: true,
   },
+  image: {
+    type: String,
+    default: 'default-subcategory.jpg',
+  },
   description: {
     type: String,
   },

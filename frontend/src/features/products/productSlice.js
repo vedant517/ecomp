@@ -85,10 +85,10 @@ export const updateProduct = createAsyncThunk(
           ...getAuthHeader(thunkAPI),
         },
       });
-      
+
       // Auto-refresh the list
       thunkAPI.dispatch(fetchProducts());
-      
+
       return response.data.data;
     } catch (error) {
       return thunkAPI.rejectWithValue(error.response?.data?.message || error.message);
@@ -104,7 +104,7 @@ export const deleteProduct = createAsyncThunk(
         headers: getAuthHeader(thunkAPI),
       });
       return id;
-    } catch (error) { 
+    } catch (error) {
       return thunkAPI.rejectWithValue(error.response?.data?.message || error.message);
     }
   }
@@ -143,7 +143,7 @@ const productSlice = createSlice({
         state.error = action.payload;
       })
 
-    // ── addProduct
+      // ── addProduct
       .addCase(addProduct.pending, (state) => { state.loading = true; state.error = null; })
       .addCase(addProduct.fulfilled, (state, action) => {
         state.loading = false;
@@ -155,7 +155,7 @@ const productSlice = createSlice({
         state.error = action.payload;
       })
 
-    // ── updateProduct
+      // ── updateProduct
       .addCase(updateProduct.pending, (state) => { state.loading = true; state.error = null; })
       .addCase(updateProduct.fulfilled, (state, action) => {
         state.loading = false;
@@ -169,7 +169,7 @@ const productSlice = createSlice({
         state.error = action.payload;
       })
 
-    // ── deleteProduct
+      // ── deleteProduct
       .addCase(deleteProduct.pending, (state) => { state.loading = true; state.error = null; })
       .addCase(deleteProduct.fulfilled, (state, action) => {
         state.loading = false;

@@ -19,12 +19,10 @@ export default function Login({ setIsAuthenticated }) {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:5000/api/admin/login', {
+      const response = await fetch('/api/admin/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), password }),
       });
 
       const data = await response.json();
@@ -37,7 +35,7 @@ export default function Login({ setIsAuthenticated }) {
         setError(data.msg || 'Login failed');
       }
     } catch (err) {
-      setError('Something went wrong. Please try again.');
+      setError('Connection error. Is the backend running?');
     } finally {
       setIsLoading(false);
     }

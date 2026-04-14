@@ -15,10 +15,12 @@ import brandRoutes from './routes/brandRoutes.js';
 import subcategoryRoutes from './routes/subcategoryRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import orderRoutes from './routes/orderRoutes.js';
-import userRoutes from './routes/userRoutes.js';
+import userRoutes from './routes/userOrderRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
 import transactionRoutes from './routes/transactionRoutes.js';
 import customerRoutes from './routes/customer.routes.js';
+import Address from "./routes/address.routes.js";
+
 
 // Load env vars
 dotenv.config();
@@ -26,22 +28,21 @@ dotenv.config();
 const app = express();
 
 // Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://127.0.0.1:5173', process.env.FRONTEND_URL],
+  origin: true,
   credentials: true
 }));
 app.use(helmet());
-app.use(morgan('dev'));
+app.use(process.env.NODE_ENV === 'production' ? morgan('combined') : morgan('dev'));
 app.use(compression());
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+// Request Logger
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
 });
-app.use('/api/', limiter);
 
 // Routes
 app.use('/api/products', productRoutes);
@@ -55,34 +56,59 @@ app.use('/api/user', userRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/customers', customerRoutes);
+app.use("/api/addresses", Address);
+
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'UP', timestamp: new Date().toISOString() });
+});
 
 app.get('/', (req, res) => {
   res.send('API is running...');
 });
 
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ success: false, message: 'Route not found' });
+});
+
 // Global error handler
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(err.status || 500).json({
+  const statusCode = err.status || 500;
+  console.error(`[Error] ${req.method} ${req.url}: ${err.message}`);
+
+  res.status(statusCode).json({
     success: false,
-    message: err.message || 'Internal Server Error',
+    message: process.env.NODE_ENV === 'production' ? 'Internal Server Error' : err.message,
+    stack: process.env.NODE_ENV === 'production' ? null : err.stack,
   });
 });
 
 // Database connection
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI || process.env.MONGO_URI);
+    const conn = await mongoose.connect(process.env.MONGODB_URI || process.env.MONGO_URI, {
+      serverSelectionTimeoutMS: 5000,
+    });
     console.log(`MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
     console.error(`Error: ${error.message}`);
-    process.exit(1);
   }
 };
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  connectDB();
-  console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+// Start DB before server
+connectDB().then(() => {
+  app.listen(PORT, () => {
+    console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+  });
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received. Shutting down gracefully...');
+  mongoose.connection.close(false, () => {
+    console.log('Mongo connection closed.');
+    process.exit(0);
+  });
 });

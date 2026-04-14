@@ -11,12 +11,12 @@ import {
   ShieldCheck, Settings2
 } from "lucide-react";
 
-/* ΓöÇΓöÇ Palette ΓöÇΓöÇ */
+/* ── Palette ── */
 const G = "#1a6b3c";
 const LIGHT_G = "#e8f5ee";
 
 
-/* ΓöÇΓöÇ Stat Card component ΓöÇΓöÇ */
+/* ── Stat Card component ── */
 function StatCard({ title, value, badge, badgeUp, sub, onClick, loading }) {
   return (
     <div className="bg-white rounded-lg border border-slate-200 p-[14px_16px] cursor-pointer hover:shadow-md transition-shadow" onClick={onClick}>
@@ -42,7 +42,7 @@ function StatCard({ title, value, badge, badgeUp, sub, onClick, loading }) {
   );
 }
 
-/* ΓöÇΓöÇ Customer Growth Line Graph ΓöÇΓöÇ */
+/* ── Customer Growth Line Graph ── */
 function CustomerGrowthGraph({ data, loading }) {
   const maxValue = Math.max(...(data?.map(d => d.count) || [50, 80, 120, 90, 150, 200, 180]), 1);
   
@@ -149,7 +149,7 @@ function CustomerGrowthGraph({ data, loading }) {
   );
 }
 
-/* ΓöÇΓöÇ Customer Details Modal ΓöÇΓöÇ */
+/* ── Customer Details Modal ── */
 function CustomerDetailsModal({ customer, onClose }) {
   if (!customer) return null;
 
@@ -158,7 +158,7 @@ function CustomerDetailsModal({ customer, onClose }) {
       <div className="bg-white rounded-lg p-6 w-96">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-slate-900">Customer Details</h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600">Γ£ò</button>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600">✕</button>
         </div>
         <div className="space-y-3">
           <div>
@@ -175,7 +175,7 @@ function CustomerDetailsModal({ customer, onClose }) {
           </div>
           <div>
             <p className="text-[10px] text-slate-400 uppercase tracking-wide">Total Spent</p>
-            <p className="text-sm font-medium text-slate-900">Γé╣{customer.totalSpend?.toLocaleString() || 0}</p>
+            <p className="text-sm font-medium text-slate-900">₹{customer.totalSpend?.toLocaleString() || 0}</p>
           </div>
           <div>
             <p className="text-[10px] text-slate-400 uppercase tracking-wide">Status</p>
@@ -206,9 +206,9 @@ function CustomerDetailsModal({ customer, onClose }) {
   );
 }
 
-/* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+/* ════════════════════════════════════════════════
    MAIN CUSTOMER COMPONENT
-ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */
+════════════════════════════════════════════════ */
 export default function Customers() {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
@@ -217,14 +217,12 @@ export default function Customers() {
   
   const itemsPerPage = 5;
 
-  // Debug logging to see what the API returns
   const { data: stats, isLoading: statsLoading, error: statsError } = useGetCustomerStatsQuery();
   const { data, isLoading, isFetching, error: customersError } = useGetCustomersQuery({ 
     page: currentPage, 
     search: searchQuery 
   });
 
-  // Log the data structure for debugging
   useEffect(() => {
     console.log('Stats API response:', stats);
     console.log('Stats error:', statsError);
@@ -232,7 +230,6 @@ export default function Customers() {
     console.log('Customers error:', customersError);
   }, [stats, statsError, data, customersError]);
 
-  // Handle different possible data structures
   const totalCustomers = stats?.totalCustomers ?? stats?.total ?? stats?.data?.totalCustomers ?? 0;
   const newCustomers = stats?.newCustomers ?? stats?.new ?? stats?.data?.newCustomers ?? 0;
   const repeatCustomers = stats?.repeatCustomers ?? stats?.repeat ?? stats?.data?.repeatCustomers ?? 0;
@@ -258,31 +255,33 @@ export default function Customers() {
     }
   };
 
-  // Show error state if API fails
   if (statsError || customersError) {
     return (
-      <div className="flex font-sans bg-slate-50 min-h-[calc(100vh-60px)] w-full">
-        <div className="flex-1 p-5 flex items-center justify-center">
-          <div className="bg-white rounded-lg border border-red-200 p-6 text-center">
-            <p className="text-red-600 mb-2">Error loading data</p>
-            <p className="text-xs text-slate-500">{statsError?.message || customersError?.message || 'Please check your API connection'}</p>
-            <button 
-              onClick={() => window.location.reload()}
-              className="mt-4 px-4 py-2 bg-[#1a6b3c] text-white rounded-md text-sm"
-            >
-              Retry
-            </button>
-          </div>
+      /* ── FIX: use w-full with NO nested flex that fights the sidebar ── */
+      <div className="w-full min-h-[calc(100vh-60px)] bg-slate-50 p-5 flex items-center justify-center">
+        <div className="bg-white rounded-lg border border-red-200 p-6 text-center">
+          <p className="text-red-600 mb-2">Error loading data</p>
+          <p className="text-xs text-slate-500">{statsError?.message || customersError?.message || 'Please check your API connection'}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 bg-[#1a6b3c] text-white rounded-md text-sm"
+          >
+            Retry
+          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex font-sans bg-slate-50 min-h-[calc(100vh-60px)] w-full">
-
-      {/* Main content */}
-      <div className="flex-1 p-5 overflow-auto">
+    /*
+     * FIX: Remove the outer `flex` wrapper that was causing the sidebar overlap.
+     * The sidebar is rendered by a parent layout component and already occupies
+     * its own column. This component only needs to fill the remaining space,
+     * so we use `w-full` + `min-h` with overflow handling — no extra flex row.
+     */
+    <div className="w-full min-h-[calc(100vh-60px)] bg-slate-50 overflow-auto">
+      <div className="p-5">
 
         {/* Top bar */}
         <div className="flex items-center justify-between mb-5">
@@ -345,7 +344,7 @@ export default function Customers() {
           <StatCard 
             title="Total Customers" 
             value={totalCustomers} 
-            badge="Γåæ 12.5%" 
+            badge="↑ 12.5%" 
             badgeUp 
             sub="vs last month" 
             loading={statsLoading}
@@ -353,7 +352,7 @@ export default function Customers() {
           <StatCard 
             title="New Customers" 
             value={newCustomers} 
-            badge="Γåæ 23%" 
+            badge="↑ 23%" 
             badgeUp 
             sub="This month" 
             loading={statsLoading}
@@ -361,7 +360,7 @@ export default function Customers() {
           <StatCard 
             title="Repeat Customers" 
             value={repeatCustomers} 
-            badge="Γåæ 8.2%" 
+            badge="↑ 8.2%" 
             badgeUp 
             sub="Returning rate" 
             loading={statsLoading}
@@ -369,7 +368,7 @@ export default function Customers() {
           <StatCard 
             title="Growth" 
             value="24%" 
-            badge="Γåæ 5%" 
+            badge="↑ 5%" 
             badgeUp 
             sub="vs last month" 
             loading={false}
@@ -442,7 +441,7 @@ export default function Customers() {
                         </td>
                         <td className="py-2.5 px-2.5 text-slate-600">{customer.orderCount || customer.orders || 0}</td>
                         <td className="py-2.5 px-2.5 text-slate-900 font-medium">
-                          Γé╣{(customer.totalSpend || customer.spend || 0).toLocaleString()}
+                          ₹{(customer.totalSpend || customer.spend || 0).toLocaleString()}
                         </td>
                         <td className="py-2.5 px-2.5">
                           <span 

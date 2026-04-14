@@ -1,28 +1,23 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
-  Plus, Search, Filter, Edit, Trash2, X, ImagePlus,
-  AlertCircle, CheckCircle2, ChevronDown, MoreHorizontal,
-  Package, DollarSign, Layers, Tag, Bell, Moon
+  Plus, Search, Filter, Edit, Trash2,
+  AlertCircle, CheckCircle2, ChevronDown, MoreHorizontal, Package,
 } from 'lucide-react';
 import {
-  fetchProducts,
-  addProduct,
-  updateProduct,
-  deleteProduct,
-  clearProductError,
-  clearSuccessMessage,
+  fetchProducts, deleteProduct,
+  clearProductError, clearSuccessMessage,
 } from '../../features/products/productSlice';
 import { fetchCategories } from '../../features/products/categorySlice';
 import { useNavigate } from 'react-router-dom';
 
 const Products = () => {
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
+  const dispatch  = useDispatch();
+  const navigate  = useNavigate();
   const { items: products, loading, error, successMessage } = useSelector((s) => s.products);
   const { categories } = useSelector((s) => s.categories);
 
-  const [search, setSearch] = useState('');
+  const [search, setSearch]             = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState(null);
 
   useEffect(() => {
@@ -47,159 +42,158 @@ const Products = () => {
   );
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] p-4 lg:p-10 space-y-10">
+    <div className="flex-1 min-w-0" style={{ display: 'flex', flexDirection: 'column', gap: '24px', padding: '24px' }}>
 
-      {/* ── Header Section ── */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-emerald-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/20">
-            <Package size={24} />
+      {/* ── Header ── */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ width: '48px', height: '48px', background: '#10b981', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Package size={24} color="white" />
           </div>
           <div>
-            <h1 className="text-3xl font-black text-slate-900 tracking-tight">Products Catalog</h1>
-            <p className="text-slate-500 font-bold uppercase tracking-[0.15em] text-[10px] mt-1">
+            <h1 style={{ fontSize: '24px', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.02em', margin: 0 }}>Products Catalog</h1>
+            <p style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', marginTop: '4px' }}>
               Currently Managing {filtered.length} Unique Items
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="relative group hidden lg:block">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors" size={20} />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Deep catalog search..."
-              className="pl-12 pr-6 py-4 bg-white border border-slate-200 rounded-2xl w-80 shadow-sm focus:outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium"
-            />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ position: 'relative' }}>
+            <Search size={16} color="#94a3b8" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+            <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Deep catalog search..."
+              style={{ paddingLeft: '42px', paddingRight: '16px', paddingTop: '12px', paddingBottom: '12px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '14px', fontSize: '14px', fontWeight: 500, outline: 'none', width: '240px' }} />
           </div>
-          <button onClick={() => navigate('/add-product')} className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-4 rounded-2xl font-black transition-all shadow-xl shadow-emerald-500/20 active:scale-95">
-            <Plus size={20} strokeWidth={3} /> ADD PRODUCT
+          <button onClick={() => navigate('/add-product')}
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#10b981', color: 'white', padding: '12px 20px', borderRadius: '14px', border: 'none', fontSize: '13px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em', cursor: 'pointer' }}>
+            <Plus size={18} strokeWidth={3} /> Add Product
           </button>
         </div>
       </div>
 
-      <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden">
-        <div className="p-8 flex flex-col md:flex-row justify-between items-center gap-6 border-b border-slate-50 bg-slate-50/20">
-          <div className="flex p-1.5 bg-slate-100/80 rounded-2xl w-fit">
-            <button className="px-6 py-2.5 rounded-xl text-sm font-black bg-white text-emerald-600 shadow-md">All Stock</button>
-            <button className="px-6 py-2.5 rounded-xl text-sm font-bold text-slate-500">Low Inventory</button>
-            <button className="px-6 py-2.5 rounded-xl text-sm font-bold text-slate-500">Out of Stock</button>
-          </div>
+      {/* ── Table Card ── */}
+      <div style={{ background: 'white', borderRadius: '24px', border: '1px solid #f1f5f9', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
 
-          <div className="flex items-center gap-3">
-            <button className="p-3.5 bg-white border border-slate-100 text-slate-500 rounded-2xl hover:text-emerald-600 transition-all shadow-sm">
-              <Filter size={20} />
-            </button>
-            <button className="p-3.5 bg-white border border-slate-100 text-slate-500 rounded-2xl hover:text-emerald-600 transition-all shadow-sm">
-              <MoreHorizontal size={20} />
-            </button>
+        {/* Toolbar */}
+        <div style={{ padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', borderBottom: '1px solid #f8fafc', background: 'rgba(248,250,252,0.5)' }}>
+          <div style={{ display: 'flex', gap: '4px', background: '#f1f5f9', padding: '4px', borderRadius: '14px' }}>
+            {['All Stock', 'Low Inventory', 'Out of Stock'].map((tab, i) => (
+              <button key={tab}
+                style={{ padding: '8px 18px', borderRadius: '10px', fontSize: '13px', fontWeight: i === 0 ? 800 : 600, border: 'none', cursor: 'pointer', transition: 'all 0.15s', background: i === 0 ? 'white' : 'transparent', color: i === 0 ? '#10b981' : '#64748b', boxShadow: i === 0 ? '0 1px 4px rgba(0,0,0,0.08)' : 'none', whiteSpace: 'nowrap' }}>
+                {tab}
+              </button>
+            ))}
+          </div>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            {[Filter, MoreHorizontal].map((Icon, i) => (
+              <button key={i} style={{ padding: '10px', background: 'white', border: '1px solid #f1f5f9', borderRadius: '12px', color: '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Icon size={18} />
+              </button>
+            ))}
           </div>
         </div>
 
-        <div className="overflow-x-auto pb-4 custom-scrollbar">
-          <table className="w-full text-left">
+        {/* Table */}
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
-              <tr className="bg-slate-50/50 text-slate-400 text-[11px] font-black uppercase tracking-[0.15em]">
-                <th className="px-8 py-6">Product Details</th>
-                <th className="px-8 py-6">Taxonomy</th>
-                <th className="px-8 py-6">Brand</th>
-                <th className="px-8 py-6 text-center">Price Points</th>
-                <th className="px-8 py-6 text-center">Availability</th>
-                <th className="px-8 py-6 text-right">Actions</th>
+              <tr style={{ background: '#fafafa', borderBottom: '1px solid #f1f5f9' }}>
+                {[
+                  { label: 'Product Details', align: 'left' },
+                  { label: 'Taxonomy',        align: 'left' },
+                  { label: 'Brand',           align: 'left' },
+                  { label: 'Price Points',    align: 'center' },
+                  { label: 'Availability',    align: 'center' },
+                  { label: 'Actions',         align: 'right' },
+                ].map(({ label, align }) => (
+                  <th key={label} style={{ padding: '16px 20px', fontSize: '11px', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.12em', textAlign: align, whiteSpace: 'nowrap' }}>
+                    {label}
+                  </th>
+                ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-50">
+            <tbody>
               {loading && filtered.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="px-8 py-20 text-center">
-                    <div className="flex flex-col items-center gap-4">
-                      <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
-                      <span className="text-slate-400 font-black uppercase tracking-widest text-xs">Syncing Catalog...</span>
-                    </div>
+                  <td colSpan={6} style={{ padding: '60px', textAlign: 'center' }}>
+                    <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+                    <div style={{ width: '44px', height: '44px', border: '4px solid #d1fae5', borderTopColor: '#10b981', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
+                    <span style={{ fontSize: '11px', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.12em' }}>Syncing Catalog...</span>
                   </td>
                 </tr>
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="px-8 py-20 text-center">
-                    <div className="max-w-xs mx-auto space-y-4">
-                      <div className="w-16 h-16 bg-slate-100 rounded-3xl flex items-center justify-center mx-auto text-slate-400">
-                        <Package size={32} />
-                      </div>
-                      <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">No products matched your parameters</p>
+                  <td colSpan={6} style={{ padding: '60px', textAlign: 'center' }}>
+                    <div style={{ width: '64px', height: '64px', background: '#f1f5f9', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+                      <Package size={30} color="#94a3b8" />
                     </div>
+                    <p style={{ fontSize: '11px', fontWeight: 800, color: '#cbd5e1', textTransform: 'uppercase', letterSpacing: '0.1em' }}>No products matched your parameters</p>
                   </td>
                 </tr>
               ) : (
                 filtered.map((product) => (
-                  <tr key={product._id} className="hover:bg-slate-50/50 transition-all group">
-                    <td className="px-8 py-6">
-                      <div className="flex items-center gap-5">
-                        <div className="w-16 h-16 bg-slate-50 rounded-[1.5rem] overflow-hidden border border-slate-100 group-hover:shadow-xl group-hover:scale-105 transition-all duration-500 flex-shrink-0">
+                  <tr key={product._id} style={{ borderBottom: '1px solid #f8fafc', transition: 'background 0.1s' }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = '#fafafa'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                  >
+                    <td style={{ padding: '16px 20px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                        <div style={{ width: '56px', height: '56px', background: '#f8fafc', borderRadius: '16px', overflow: 'hidden', border: '1px solid #f1f5f9', flexShrink: 0 }}>
                           <img
-                            src={product?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(product?.name || 'Item')}&background=10b981&color=fff&bold=true`}
-                            className="w-full h-full object-cover"
+                            src={product?.image && product.image.startsWith('http') ? product.image : `https://ui-avatars.com/api/?name=${encodeURIComponent(product?.name || 'Item')}&background=10b981&color=fff&bold=true`}
+                            onError={(e) => { e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(product?.name || 'Item')}&background=10b981&color=fff&bold=true` }}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                             alt={product?.name}
                           />
                         </div>
-                        <div className="min-w-0">
-                          <h4 className="font-black text-slate-900 uppercase text-sm tracking-tight truncate group-hover:text-emerald-500 transition-colors">
+                        <div style={{ minWidth: 0 }}>
+                          <h4 style={{ fontSize: '14px', fontWeight: 900, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '-0.01em', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '180px' }}>
                             {product?.name || 'Unknown Item'}
                           </h4>
-                          <p className="text-[11px] font-bold text-slate-400 truncate mt-1 uppercase tracking-widest">
+                          <p style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                             UID: {product?._id ? product._id.slice(-6) : 'N/A'}
                           </p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-8 py-6">
-                      <div className="flex flex-col">
-                        <span className="text-[11px] font-black uppercase tracking-widest text-slate-800">
-                          {product.category?.name || 'General'}
-                        </span>
-                        <span className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-tighter">
-                          {product.subcategory?.name || 'Unassigned'}
-                        </span>
+                    <td style={{ padding: '16px 20px' }}>
+                      <div>
+                        <div style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#1e293b' }}>{product.category?.name || 'General'}</div>
+                        <div style={{ fontSize: '10px', fontWeight: 700, color: '#94a3b8', marginTop: '3px', textTransform: 'uppercase' }}>{product.subcategory?.name || 'Unassigned'}</div>
                       </div>
                     </td>
-                    <td className="px-8 py-6">
-                      <div className="flex items-center gap-2">
-                         {product.brand?.logo && (
-                           <img src={product.brand.logo} className="w-5 h-5 rounded-full object-contain" alt="" />
-                         )}
-                         <span className="text-[11px] font-black uppercase text-slate-600">{product.brand?.name || 'Generic'}</span>
+                    <td style={{ padding: '16px 20px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        {product.brand?.logo && <img src={product.brand.logo} style={{ width: '20px', height: '20px', borderRadius: '50%', objectFit: 'contain' }} alt="" />}
+                        <span style={{ fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', color: '#374151' }}>{product.brand?.name || 'Generic'}</span>
                       </div>
                     </td>
-                    <td className="px-8 py-6 text-center">
-                      <span className="font-black text-slate-900 text-lg tracking-tighter">${Number(product.price).toLocaleString()}</span>
+                    <td style={{ padding: '16px 20px', textAlign: 'center' }}>
+                      <span style={{ fontSize: '18px', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.02em' }}>${Number(product.price).toLocaleString()}</span>
                     </td>
-                    <td className="px-8 py-6 text-center">
-                      <div className="flex flex-col items-center gap-2">
-                        <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ring-1 ${product.stock > 10 ? 'bg-emerald-50 text-emerald-600 ring-emerald-500/20' :
-                            product.stock > 0 ? 'bg-amber-50 text-amber-600 ring-amber-500/20' :
-                              'bg-rose-50 text-rose-600 ring-rose-500/20'
-                          }`}>
-                          {product.stock > 0 ? 'AVAILABLE' : 'DEPLETED'}
-                        </span>
-                        <span className="text-[10px] font-black text-slate-400 tracking-tighter uppercase">{product.stock} units</span>
-                      </div>
+                    <td style={{ padding: '16px 20px', textAlign: 'center' }}>
+                      <span style={{
+                        display: 'inline-block', padding: '5px 14px', borderRadius: '999px', fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em',
+                        background: product.stock > 10 ? '#f0fdf4' : product.stock > 0 ? '#fffbeb' : '#fff1f2',
+                        color: product.stock > 10 ? '#059669' : product.stock > 0 ? '#d97706' : '#e11d48',
+                      }}>
+                        {product.stock > 0 ? 'Available' : 'Depleted'}
+                      </span>
+                      <div style={{ fontSize: '10px', fontWeight: 800, color: '#94a3b8', marginTop: '4px', textTransform: 'uppercase' }}>{product.stock} units</div>
                     </td>
-                    <td className="px-8 py-6 text-right">
-                      <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 translate-x-4 group-hover:translate-x-0 transition-all duration-300">
-                        <button
-                          onClick={() => navigate(`/edit-product/${product._id}`)}
-                          className="p-3 bg-white text-slate-400 hover:text-blue-500 hover:bg-blue-50 border border-slate-100 rounded-2xl shadow-sm transition-all"
-                          title="Edit Details"
-                        >
-                          <Edit size={18} />
+                    <td style={{ padding: '16px 20px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                        <button onClick={() => navigate(`/edit-product/${product._id}`)}
+                          style={{ padding: '8px', background: 'white', border: '1px solid #f1f5f9', borderRadius: '10px', color: '#94a3b8', cursor: 'pointer', display: 'flex', transition: 'all 0.15s' }}
+                          onMouseEnter={(e) => { e.currentTarget.style.background = '#eff6ff'; e.currentTarget.style.color = '#3b82f6'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = 'white'; e.currentTarget.style.color = '#94a3b8'; }}>
+                          <Edit size={16} />
                         </button>
-                        <button
-                          onClick={() => setDeleteConfirm(product._id)}
-                          className="p-3 bg-white text-slate-400 hover:text-rose-500 hover:bg-rose-50 border border-slate-100 rounded-2xl shadow-sm transition-all"
-                          title="Purge Product"
-                        >
-                          <Trash2 size={18} />
+                        <button onClick={() => setDeleteConfirm(product._id)}
+                          style={{ padding: '8px', background: 'white', border: '1px solid #f1f5f9', borderRadius: '10px', color: '#94a3b8', cursor: 'pointer', display: 'flex', transition: 'all 0.15s' }}
+                          onMouseEnter={(e) => { e.currentTarget.style.background = '#fff1f2'; e.currentTarget.style.color = '#e11d48'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = 'white'; e.currentTarget.style.color = '#94a3b8'; }}>
+                          <Trash2 size={16} />
                         </button>
                       </div>
                     </td>
@@ -210,46 +204,50 @@ const Products = () => {
           </table>
         </div>
 
-        {/* ── High Fidelity Pagination ── */}
-        <div className="p-8 bg-slate-50/30 border-t border-slate-50 flex flex-col md:flex-row justify-between items-center gap-6">
-          <p className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">
-            Records <span className="text-slate-900">1 - {filtered.length}</span> of {products.length} entries
+        {/* Pagination Footer */}
+        <div style={{ padding: '20px 24px', background: 'rgba(248,250,252,0.5)', borderTop: '1px solid #f8fafc', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+          <p style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#94a3b8', margin: 0 }}>
+            Records <span style={{ color: '#0f172a' }}>1 – {filtered.length}</span> of {products.length} entries
           </p>
-          <div className="flex items-center gap-2">
-            <button className="px-5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-black uppercase tracking-widest text-slate-500 hover:bg-slate-50 transition-all opacity-50 cursor-not-allowed">Previous</button>
-            <div className="flex gap-1.5">
-              <button className="w-10 h-10 rounded-xl bg-emerald-500 text-white font-black text-xs shadow-lg shadow-emerald-500/20">1</button>
-              <button className="w-10 h-10 rounded-xl bg-white border border-slate-100 text-slate-400 font-bold text-xs hover:bg-slate-50 transition-all">2</button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button style={{ padding: '8px 18px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#94a3b8', cursor: 'not-allowed', opacity: 0.5 }}>Previous</button>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              <button style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#10b981', color: 'white', border: 'none', fontSize: '13px', fontWeight: 800, cursor: 'pointer' }}>1</button>
+              <button style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'white', border: '1px solid #f1f5f9', color: '#94a3b8', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>2</button>
             </div>
-            <button className="px-5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-black uppercase tracking-widest text-slate-500 hover:bg-slate-50 transition-all active:scale-95 shadow-sm">Next</button>
+            <button style={{ padding: '8px 18px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#475569', cursor: 'pointer' }}>Next</button>
           </div>
         </div>
       </div>
 
-      {/* ── Purge Confirmation ── */}
+      {/* ── Delete Confirm Modal ── */}
       {deleteConfirm && (
-        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-xl animate-in fade-in active:scale-100 transition-all">
-          <div className="bg-white p-10 rounded-[3.5rem] shadow-[0_32px_128px_rgb(0,0,0,0.2)] max-w-sm w-full text-center space-y-6 animate-in zoom-in-95 duration-300">
-            <div className="w-20 h-20 bg-rose-50 text-rose-500 rounded-3xl flex items-center justify-center mx-auto shadow-inner ring-4 ring-rose-50">
-              <AlertCircle size={40} />
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(8px)' }}>
+          <div style={{ background: 'white', padding: '40px', borderRadius: '28px', boxShadow: '0 32px 80px rgba(0,0,0,0.2)', maxWidth: '360px', width: '100%', textAlign: 'center' }}>
+            <div style={{ width: '72px', height: '72px', background: '#fff1f2', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+              <AlertCircle size={36} color="#e11d48" />
             </div>
-            <div>
-              <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter leading-tight">Purge Product?</h3>
-              <p className="text-slate-500 font-bold text-sm mt-3 px-4">This record will be permanently deleted from the primary database cluster.</p>
-            </div>
-            <div className="flex gap-3 pt-4">
-              <button onClick={() => setDeleteConfirm(null)} className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-[1.5rem] font-black text-xs uppercase tracking-widest hover:bg-slate-200 transition-all active:scale-95">Cancel</button>
-              <button onClick={() => handleDelete(deleteConfirm)} className="flex-1 py-4 bg-rose-500 text-white rounded-[1.5rem] font-black text-xs uppercase tracking-widest shadow-xl shadow-rose-500/20 hover:bg-rose-600 transition-all active:scale-95">Confirm Purge</button>
+            <h3 style={{ fontSize: '22px', fontWeight: 900, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '-0.01em', margin: 0 }}>Purge Product?</h3>
+            <p style={{ fontSize: '14px', color: '#64748b', marginTop: '12px', lineHeight: 1.5 }}>This record will be permanently deleted from the primary database cluster.</p>
+            <div style={{ display: 'flex', gap: '12px', marginTop: '28px' }}>
+              <button onClick={() => setDeleteConfirm(null)}
+                style={{ flex: 1, padding: '14px', background: '#f1f5f9', color: '#475569', border: 'none', borderRadius: '16px', fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', cursor: 'pointer' }}>
+                Cancel
+              </button>
+              <button onClick={() => handleDelete(deleteConfirm)}
+                style={{ flex: 1, padding: '14px', background: '#e11d48', color: 'white', border: 'none', borderRadius: '16px', fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', cursor: 'pointer' }}>
+                Confirm Purge
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* ── Notifications ── */}
+      {/* ── Success Toast ── */}
       {successMessage && (
-        <div className="fixed bottom-10 right-10 z-[1000] bg-emerald-500 text-white px-8 py-5 rounded-[2rem] shadow-2xl shadow-emerald-500/30 flex items-center gap-4 animate-in slide-in-from-bottom-10">
-          <CheckCircle2 size={24} />
-          <span className="font-black text-xs uppercase tracking-widest">{successMessage}</span>
+        <div style={{ position: 'fixed', bottom: '32px', right: '32px', zIndex: 1000, background: '#10b981', color: 'white', padding: '16px 24px', borderRadius: '16px', boxShadow: '0 8px 24px rgba(16,185,129,0.3)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <CheckCircle2 size={22} />
+          <span style={{ fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{successMessage}</span>
         </div>
       )}
     </div>
