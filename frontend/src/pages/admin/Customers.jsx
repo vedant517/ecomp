@@ -10,6 +10,7 @@ import {
   ClipboardList, Tag, Grid2x2, Heart, PlusSquare, Image, List, Star,
   ShieldCheck, Settings2
 } from "lucide-react";
+import { formatINR } from "../../utils/currency";
 
 /* ── Palette ── */
 const G = "#1a6b3c";
@@ -175,7 +176,7 @@ function CustomerDetailsModal({ customer, onClose }) {
           </div>
           <div>
             <p className="text-[10px] text-slate-400 uppercase tracking-wide">Total Spent</p>
-            <p className="text-sm font-medium text-slate-900">₹{customer.totalSpend?.toLocaleString() || 0}</p>
+            <p className="text-sm font-medium text-slate-900">{formatINR(customer.totalSpend)}</p>
           </div>
           <div>
             <p className="text-[10px] text-slate-400 uppercase tracking-wide">Status</p>
@@ -441,7 +442,7 @@ export default function Customers() {
                         </td>
                         <td className="py-2.5 px-2.5 text-slate-600">{customer.orderCount || customer.orders || 0}</td>
                         <td className="py-2.5 px-2.5 text-slate-900 font-medium">
-                          ₹{(customer.totalSpend || customer.spend || 0).toLocaleString()}
+                          {formatINR(customer.totalSpend || customer.spend || 0)}
                         </td>
                         <td className="py-2.5 px-2.5">
                           <span 

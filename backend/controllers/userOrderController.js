@@ -17,12 +17,17 @@ export const createOrder = async (req, res) => {
       });
     }
 
-    const order = await Order.create({
+    const orderData = {
       orderId: "#ORD" + Date.now(),
-      user: req.user?.id || "guest",
       ...req.body,
       status: "Pending"
-    });
+    };
+
+    if (req.user?.id) {
+      orderData.user = req.user.id;
+    }
+
+    const order = await Order.create(orderData);
 
     res.status(201).json({
       success: true,

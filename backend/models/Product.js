@@ -103,6 +103,8 @@ const productSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+}, {
+  bufferCommands: false,
 });
 
 productSchema.index({ category: 1 });

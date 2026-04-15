@@ -10,6 +10,7 @@ import {
   useRefundTransactionMutation,
 } from '../../features/transactions/transactionApi';
 import toast from 'react-hot-toast';
+import { formatINR } from '../../utils/currency';
 
 const statusConfig = {
   captured:   { bg: '#e8f5ee', color: '#1a6b3c', icon: CheckCircle2, label: 'Success' },
@@ -66,7 +67,7 @@ function TransactionDetailModal({ transaction, onClose, onRefund }) {
             ['Transaction ID', transaction.transactionId],
             ['Razorpay Order', transaction.razorpayOrderId],
             ['Payment ID', transaction.razorpayPaymentId || '—'],
-            ['Amount', `₹${transaction.amount?.toLocaleString() || 0}`],
+            ['Amount', formatINR(transaction.amount)],
             ['Currency', transaction.currency || 'INR'],
             ['Receipt', transaction.receipt || '—'],
             ['Date', new Date(transaction.createdAt).toLocaleString('en-IN')],
@@ -166,7 +167,7 @@ export default function Transactions() {
       {/* ── Stats ── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '16px' }}>
         <StatCard title="Total Transactions" value={statsLoading ? '...' : stats?.total || 0} icon={CreditCard} color="#6366f1" trend="All time" />
-        <StatCard title="Total Revenue" value={statsLoading ? '...' : `₹${(stats?.totalRevenue || 0).toLocaleString()}`} icon={IndianRupee} color="#10b981" trend="+12.5%" trendUp />
+        <StatCard title="Total Revenue" value={statsLoading ? '...' : formatINR(stats?.totalRevenue || 0)} icon={IndianRupee} color="#10b981" trend="+12.5%" trendUp />
         <StatCard title="Successful" value={statsLoading ? '...' : stats?.captured || 0} icon={CheckCircle2} color="#22c55e" />
         <StatCard title="Pending" value={statsLoading ? '...' : stats?.pending || 0} icon={Clock} color="#f59e0b" />
         <StatCard title="Failed / Refunded" value={statsLoading ? '...' : (stats?.failed || 0) + (stats?.refunded || 0)} icon={XCircle} color="#ef4444" />
@@ -239,7 +240,7 @@ export default function Transactions() {
                           <td style={{ padding: '14px', textAlign: 'center', fontSize: '11px', fontWeight: 700, color: '#94a3b8' }}>{(currentPage - 1) * itemsPerPage + i + 1}</td>
                           <td style={{ padding: '14px', fontSize: '11px', fontWeight: 800, color: '#6366f1', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>{t.transactionId}</td>
                           <td style={{ padding: '14px', fontSize: '11px', fontWeight: 700, color: '#64748b', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>{t.razorpayOrderId?.slice(0, 20)}...</td>
-                          <td style={{ padding: '14px', textAlign: 'center', fontSize: '13px', fontWeight: 900, color: '#0f172a', whiteSpace: 'nowrap' }}>₹{t.amount?.toLocaleString() || 0}</td>
+                          <td style={{ padding: '14px', textAlign: 'center', fontSize: '13px', fontWeight: 900, color: '#0f172a', whiteSpace: 'nowrap' }}>{formatINR(t.amount)}</td>
                           <td style={{ padding: '14px', textAlign: 'center' }}>
                             <span style={{ fontSize: '10px', fontWeight: 700, color: '#64748b', background: '#f1f5f9', padding: '4px 10px', borderRadius: '999px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{t.paymentMethod || 'Razorpay'}</span>
                           </td>

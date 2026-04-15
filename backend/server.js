@@ -6,6 +6,10 @@ import morgan from 'morgan';
 import helmet from 'helmet';
 import compression from 'compression';
 import rateLimit from 'express-rate-limit';
+import dns from 'dns';
+
+// DNS servers forcibly set to Google to bypass local ECONNREFUSED SRV errors
+dns.setServers(['8.8.8.8', '8.8.4.4']);
 
 // Routes
 import productRoutes from './routes/productRoutes.js';
@@ -20,6 +24,8 @@ import paymentRoutes from './routes/paymentRoutes.js';
 import transactionRoutes from './routes/transactionRoutes.js';
 import customerRoutes from './routes/customer.routes.js';
 import Address from "./routes/address.routes.js";
+import offerRoutes from './routes/offerRoutes.js';
+import adminProfileRoutes from './routes/adminProfile.routes.js';
 
 
 // Load env vars
@@ -57,6 +63,8 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/customers', customerRoutes);
 app.use("/api/addresses", Address);
+app.use('/api/offers', offerRoutes);
+app.use('/api/admin/profile', adminProfileRoutes);
 
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'UP', timestamp: new Date().toISOString() });
@@ -75,6 +83,7 @@ app.use((req, res) => {
 app.use((err, req, res, next) => {
   const statusCode = err.status || 500;
   console.error(`[Error] ${req.method} ${req.url}: ${err.message}`);
+  
 
   res.status(statusCode).json({
     success: false,
@@ -86,22 +95,30 @@ app.use((err, req, res, next) => {
 // Database connection
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI || process.env.MONGO_URI, {
+    const conn = await mongoose.connect(process.env.MONGODB_URI, {
       serverSelectionTimeoutMS: 5000,
+      family: 4,
     });
     console.log(`MongoDB Connected: ${conn.connection.host}`);
+    return true;
   } catch (error) {
-    console.error(`Error: ${error.message}`);
+    console.error(`MongoDB Connection Error: ${error.message}`);
+    return false;
   }
 };
 
 const PORT = process.env.PORT || 5000;
 
 // Start DB before server
-connectDB().then(() => {
-  app.listen(PORT, () => {
-    console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
-  });
+connectDB().then((isConnected) => {
+  if (isConnected) {
+    app.listen(PORT, () => {
+      console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+    });
+  } else {
+    console.error('Failed to connect to MongoDB. Server not started.');
+    process.exit(1);
+  }
 });
 
 // Graceful shutdown

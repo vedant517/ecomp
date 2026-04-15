@@ -12,6 +12,7 @@ import { fetchProducts } from '../../features/products/productSlice';
 import { fetchCategories } from '../../features/products/categorySlice';
 import { useGetOrdersQuery, useGetOrderStatsQuery } from '../../features/orders/orderApi';
 import { useGetCustomerStatsQuery } from '../../features/customers/customerApi';
+import { formatCompactINR, formatINR } from '../../utils/currency';
 
 const Dashboard = () => {
   const dispatch = useDispatch();
@@ -36,7 +37,7 @@ const Dashboard = () => {
     const date = new Date(day._id);
     return {
       name: date.toLocaleDateString('en-US', { weekday: 'short' }),
-      value: day.total / 1000
+      value: day.total
     };
   });
 
@@ -140,7 +141,7 @@ const Dashboard = () => {
           </div>
           <div style={{ marginTop: '12px', display: 'flex', alignItems: 'baseline', gap: '6px', flexWrap: 'wrap' }}>
             <span style={{ fontSize: '22px', fontWeight: '700', color: '#1e293b' }}>
-              $ {statsLoading ? '...' : (statsData?.totalRevenue || 0).toLocaleString()}
+              {statsLoading ? '...' : formatINR(statsData?.totalRevenue || 0)}
             </span>
             <span style={{ fontSize: '11px', fontWeight: '700', color: '#10b981', whiteSpace: 'nowrap' }}>Revenue Net Total</span>
           </div>
@@ -224,7 +225,7 @@ const Dashboard = () => {
               { val: String(totalProducts), name: 'Total Prod.' },
               { val: String(stockProducts), name: 'In Stock' },
               { val: String(outOfStockProducts), name: 'Out of Stock' },
-              { val: `$${(statsData?.totalRevenue || 0).toLocaleString()}`, name: 'Revenue' }
+              { val: formatINR(statsData?.totalRevenue || 0), name: 'Revenue' }
             ].map((stat, i) => (
               <div key={i} style={{ borderBottom: `2px solid ${stat.active ? '#4c9f70' : '#f1f5f9'}`, paddingBottom: '8px', background: stat.active ? 'rgba(240,253,244,0.5)' : 'transparent', minWidth: 0 }}>
                 <div style={{ padding: '0 4px' }}>
@@ -246,14 +247,14 @@ const Dashboard = () => {
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10 }} dy={8} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10 }} tickFormatter={v => `${v}k`} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10 }} tickFormatter={(value) => formatCompactINR(value, { maximumFractionDigits: 0 })} />
                 <Tooltip
                   cursor={{ stroke: '#4c9f70', strokeWidth: 1, strokeDasharray: '3 3' }}
                   content={({ active, payload, label }) => {
                     if (active && payload && payload.length) {
                       return (
                         <div style={{ background: '#aee0b9', color: '#1f2937', fontSize: '11px', fontWeight: 'bold', padding: '5px 10px', borderRadius: '8px', textAlign: 'center' }}>
-                          {label}<br />{payload[0].value}k
+                          {label}<br />{formatINR(payload[0].value)}
                         </div>
                       );
                     }
@@ -298,7 +299,7 @@ const Dashboard = () => {
                 statsData.salesByCountry.map((item, idx) => (
                   <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                      <span style={{ fontSize: '11px', fontWeight: '600', color: '#64748b' }}>{item._id || 'Unknown'}</span>
-                     <span style={{ fontSize: '11px', fontWeight: '700', color: '#1e293b' }}>${item.revenue.toLocaleString()}</span>
+                     <span style={{ fontSize: '11px', fontWeight: '700', color: '#1e293b' }}>{formatINR(item.revenue)}</span>
                   </div>
                 ))
               ) : (
@@ -346,7 +347,7 @@ const Dashboard = () => {
                         {row.status}
                       </div>
                     </td>
-                    <td style={{ padding: '11px 0', textAlign: 'right', fontWeight: '600' }}>${row.price?.toFixed(2)}</td>
+                    <td style={{ padding: '11px 0', textAlign: 'right', fontWeight: '600' }}>{formatINR(row.totalPrice ?? row.price ?? 0)}</td>
                   </tr>
                 )) : (
                   <tr><td colSpan="5" style={{ padding: '24px', textAlign: 'center', color: '#94a3b8', fontWeight: '400' }}>No recent transactions found.</td></tr>
@@ -388,7 +389,7 @@ const Dashboard = () => {
                     <div style={{ fontSize: '9px', color: '#94a3b8', marginTop: '1px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.totalQty} units sold</div>
                   </div>
                 </div>
-                <div style={{ fontSize: '11px', fontWeight: '700', color: '#1e293b', flexShrink: 0 }}>${p.totalRevenue.toLocaleString()}</div>
+                <div style={{ fontSize: '11px', fontWeight: '700', color: '#1e293b', flexShrink: 0 }}>{formatINR(p.totalRevenue)}</div>
               </div>
             ))}
           </div>
@@ -439,7 +440,7 @@ const Dashboard = () => {
                           ACTIVE
                         </div>
                       </td>
-                      <td style={{ padding: '11px 12px', textAlign: 'right', fontWeight: '700' }}>${p.totalRevenue.toLocaleString()}</td>
+                      <td style={{ padding: '11px 12px', textAlign: 'right', fontWeight: '700' }}>{formatINR(p.totalRevenue)}</td>
                     </tr>
                 ))}
               </tbody>
@@ -500,7 +501,7 @@ const Dashboard = () => {
                   </div>
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontSize: '11px', fontWeight: '700', color: '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
-                    <div style={{ fontSize: '10px', fontWeight: '700', color: '#4c9f70' }}>${p.price}</div>
+                    <div style={{ fontSize: '10px', fontWeight: '700', color: '#4c9f70' }}>{formatINR(p.price)}</div>
                   </div>
                 </div>
                 <button style={{ display: 'flex', alignItems: 'center', gap: '3px', padding: '4px 10px', borderRadius: '6px', background: '#4c9f70', color: '#fff', border: 'none', cursor: 'pointer', fontSize: '10px', fontWeight: '600', flexShrink: 0 }}>

@@ -2,9 +2,12 @@ import mongoose from 'mongoose';
 import Admin from './models/Admin.js';
 import User from './models/User.js';
 
+import dotenv from 'dotenv';
+dotenv.config();
+
 const checkNewDB = async () => {
   try {
-    await mongoose.connect("mongodb+srv://dbuser:xGBZ3aCGMxPEmOdZ@cluster0.nesjeqr.mongodb.net/?appName=Cluster0");
+    await mongoose.connect(process.env.MONGODB_URI);
     const adminCount = await Admin.countDocuments();
     const userCount = await User.countDocuments();
     console.log('--- NEW DB AUDIT ---');

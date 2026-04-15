@@ -2,6 +2,7 @@ import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import AdminLayout from './components/layout/AdminLayout';
 import ProductMedia from './pages/admin/productMedia';
+import AdminProfile from './pages/admin/adminprofile';
 
 // Lazy load components
 const Dashboard = lazy(() => import('./pages/admin/Dashboard'));
@@ -14,6 +15,9 @@ const Products = lazy(() => import('./pages/admin/Products'));
 const Order = lazy(() => import('./pages/admin/Order'));
 const Transactions = lazy(() => import('./pages/admin/Transactions'));
 const Customers = lazy(() => import('./pages/admin/Customers'));
+const ProductReviews = lazy(() => import('./pages/admin/ProductReviews'));
+const ProductReviewPage = lazy(() => import('./pages/user/ProductReviewPage'));
+
 
 const LoadingSpinner = () => (
   <div className="flex-1 flex items-center justify-center min-h-[400px]">
@@ -40,6 +44,10 @@ function App() {
             path="/"
             element={!isAuthenticated ? <Login setIsAuthenticated={setIsAuthenticated} /> : <Navigate to="/dashboard" replace />}
           />
+          
+          {/* Public / User routes */}
+          <Route path="/product/:id/reviews" element={<ProductReviewPage />} />
+
 
           {/* Protected Dashboard Routes */}
           <Route
@@ -56,6 +64,8 @@ function App() {
             <Route path="/transactions" element={<Transactions />} />
             <Route path="/customers" element={<Customers />} />
             <Route path="/media" element={<ProductMedia />} />
+            <Route path="/reviews" element={<ProductReviews />} />
+            <Route path="/roles" element={<AdminProfile />} />
             <Route path="*" element={<div className="p-8 text-slate-400 text-center">Page under construction</div>} />
           </Route>
 

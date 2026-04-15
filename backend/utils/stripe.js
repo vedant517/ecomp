@@ -7,12 +7,12 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 export const createCheckoutSession = async (orderItems, orderId) => {
   const line_items = orderItems.map((item) => ({
     price_data: {
-      currency: 'usd',
+      currency: 'inr',
       product_data: {
         name: item.name,
         images: [item.image],
       },
-      unit_amount: Math.round(item.price * 100), // Stripe expects cents
+      unit_amount: Math.round(item.price * 100), // Stripe expects paise for INR
     },
     quantity: item.qty,
   }));

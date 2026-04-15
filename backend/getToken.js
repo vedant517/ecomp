@@ -7,7 +7,7 @@ dotenv.config();
 
 const generateToken = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI || process.env.MONGO_URI);
+    await mongoose.connect(process.env.MONGODB_URI);
     const admin = await Admin.findOne({ email: 'admin@gmail.com' });
     
     if (!admin) {

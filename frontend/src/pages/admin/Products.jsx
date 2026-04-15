@@ -10,6 +10,7 @@ import {
 } from '../../features/products/productSlice';
 import { fetchCategories } from '../../features/products/categorySlice';
 import { useNavigate } from 'react-router-dom';
+import { formatINR } from '../../utils/currency';
 
 const Products = () => {
   const dispatch  = useDispatch();
@@ -169,7 +170,7 @@ const Products = () => {
                       </div>
                     </td>
                     <td style={{ padding: '16px 20px', textAlign: 'center' }}>
-                      <span style={{ fontSize: '18px', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.02em' }}>${Number(product.price).toLocaleString()}</span>
+                      <span style={{ fontSize: '18px', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.02em' }}>{formatINR(product.price)}</span>
                     </td>
                     <td style={{ padding: '16px 20px', textAlign: 'center' }}>
                       <span style={{

@@ -8,6 +8,7 @@ import { fetchCategories, fetchSubcategories } from '../../features/products/cat
 import { fetchBrands } from '../../features/products/brandSlice';
 import { addProduct, updateProduct, fetchProductById } from '../../features/products/productSlice';
 import { useNavigate, useParams } from 'react-router-dom';
+import { formatINR } from '../../utils/currency';
 
 const AddProduct = () => {
   const dispatch   = useDispatch();
@@ -277,7 +278,7 @@ const AddProduct = () => {
                     {/* existing text fields */}
                     {[
                       { label: 'Size / Name', field: 'name', type: 'text' },
-                      { label: 'Variant Price', field: 'price', type: 'number' },
+                      { label: 'Variant Price (INR)', field: 'price', type: 'number' },
                       { label: 'Stock', field: 'stock', type: 'number' },
                     ].map(({ label, field, type }) => (
                       <div key={field}>
@@ -357,23 +358,23 @@ const AddProduct = () => {
             <h2 style={{ fontSize: '14px', fontWeight: 800, color: '#1e293b', marginBottom: '20px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Pricing</h2>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div style={{ gridColumn: '1 / -1' }}>
-                <label style={labelStyle}>Base Price</label>
+                <label style={labelStyle}>Base Price (INR)</label>
                 <div style={{ position: 'relative' }}>
-                  <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', fontWeight: 700 }}>$</span>
+                  <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', fontWeight: 700 }}>₹</span>
                   <input required type="number" name="price" value={formData.price} onChange={handleInputChange} placeholder="0.00"
                     style={{ ...inputStyle, paddingLeft: '28px' }} />
                 </div>
               </div>
               <div>
-                <label style={labelStyle}>Discount Price</label>
+                <label style={labelStyle}>Discount Price (INR)</label>
                 <div style={{ borderRadius: '12px', border: '1px solid #dcfce7', overflow: 'hidden' }}>
                   <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr' }}>
-                    <span style={{ padding: '12px 14px', background: '#f0fdf4', color: '#4c9f70', fontWeight: 700 }}>$</span>
+                    <span style={{ padding: '12px 14px', background: '#f0fdf4', color: '#4c9f70', fontWeight: 700 }}>₹</span>
                     <input type="number" name="discountPrice" value={formData.discountPrice} onChange={handleInputChange} placeholder="0.00"
                       style={{ background: '#f0fdf4', padding: '12px', fontSize: '14px', fontWeight: 700, color: '#4c9f70', border: 'none', outline: 'none' }} />
                   </div>
                   <div style={{ background: '#f0fdf4', borderTop: '1px solid #dcfce7', padding: '8px 14px', fontSize: '11px', fontWeight: 700, color: '#4c9f70', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                    Sale: ${saleResult.toFixed(2)}
+                    Sale: {formatINR(saleResult)}
                   </div>
                 </div>
               </div>

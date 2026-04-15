@@ -8,7 +8,7 @@ const orderSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.ObjectId,
     ref: 'User',
-    required: false,
+    required: null,
   },
   orderItems: [
     {
@@ -22,7 +22,7 @@ const orderSchema = new mongoose.Schema({
         required: true,
       },
     },
-  ],
+  ], 
   shippingAddress: {
     address: { type: String },
     city: { type: String },
@@ -82,6 +82,7 @@ const orderSchema = new mongoose.Schema({
   },
 }, {
   timestamps: true,
+  bufferCommands: false,
 });
 
 orderSchema.index({ user: 1 });

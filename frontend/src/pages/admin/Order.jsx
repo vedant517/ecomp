@@ -21,6 +21,7 @@ import {
   useUpdateOrderStatusMutation,
   useCreateOrderMutation,
 } from '../../features/orders/orderApi';
+import { formatINR } from '../../utils/currency';
 
 /* ── Status badge styles ── */
 const statusStyle = {
@@ -478,7 +479,7 @@ export default function OrderManagement() {
                           {o.date}
                         </td>
                         <td style={{ padding: '14px 12px', fontSize: '13px', fontWeight: 900, color: '#0f172a', textAlign: 'center', whiteSpace: 'nowrap' }}>
-                          ${o.price.toLocaleString()}
+                          {formatINR(o.price)}
                         </td>
                         <td style={{ padding: '14px 12px', textAlign: 'center' }}>
                           <span style={{
