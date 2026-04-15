@@ -1,11 +1,15 @@
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
+import mongoose from 'mongoose';
 import Transaction from '../models/Transaction.js';
 import Order from '../models/Order.js';
 import Product from '../models/Product.js';
 
 // Initialize Razorpay instance
 const getRazorpayInstance = () => {
+  if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+    console.error('CRITICAL ERROR: Razorpay keys are missing from environment variables!');
+  }
   return new Razorpay({
     key_id: process.env.RAZORPAY_KEY_ID,
     key_secret: process.env.RAZORPAY_KEY_SECRET,
@@ -14,6 +18,8 @@ const getRazorpayInstance = () => {
 
 // Create a Razorpay order
 export const createRazorpayOrder = async (req, res) => {
+  console.log('--- RECV: createRazorpayOrder ---');
+  console.log('Body:', JSON.stringify(req.body, null, 2));
   try {
     const { amount, currency = 'INR', orderId, notes = {} } = req.body;
 
@@ -26,9 +32,21 @@ export const createRazorpayOrder = async (req, res) => {
     // If orderId is provided, we can verify the amount from the database for security
     let paymentAmount = amount;
     if (orderId) {
-      const dbOrder = await Order.findById(orderId);
+      let dbOrder = null;
+      // Try by ObjectId first if valid
+      if (mongoose.Types.ObjectId.isValid(orderId)) {
+        dbOrder = await Order.findById(orderId);
+      }
+      // If not found by _id, try by the custom orderId field
+      if (!dbOrder) {
+        dbOrder = await Order.findOne({ orderId: orderId });
+      }
+      
       if (dbOrder) {
         paymentAmount = dbOrder.totalPrice;
+        console.log(`Found order ${orderId}, using total price: ${paymentAmount}`);
+      } else {
+        console.log(`Order ${orderId} not found in database, using provided amount: ${amount}`);
       }
     }
 
@@ -75,6 +93,8 @@ export const createRazorpayOrder = async (req, res) => {
 
 // Verify Razorpay payment signature
 export const verifyPayment = async (req, res) => {
+  console.log('--- RECV: verifyPayment ---');
+  console.log('Body:', JSON.stringify(req.body, null, 2));
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
 

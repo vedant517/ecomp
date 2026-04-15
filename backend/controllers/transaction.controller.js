@@ -16,6 +16,8 @@ const getRazorpayInstance = () => {
 // @route   POST /api/transactions/create-order
 // @access  Private
 export const createRazorpayOrder = async (req, res) => {
+  console.log('--- RECV: createRazorpayOrder (Transactions) ---');
+  console.log('Body:', JSON.stringify(req.body, null, 2));
   try {
     const { amount, currency = 'INR', orderId, notes = {} } = req.body;
 
@@ -86,6 +88,8 @@ export const createRazorpayOrder = async (req, res) => {
 // @route   POST /api/transactions/verify
 // @access  Private
 export const verifyPayment = async (req, res) => {
+  console.log('--- RECV: verifyPayment (Transactions) ---');
+  console.log('Body:', JSON.stringify(req.body, null, 2));
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
 

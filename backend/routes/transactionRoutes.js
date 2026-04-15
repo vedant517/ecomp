@@ -2,8 +2,6 @@ import express from 'express';
 import {
   createRazorpayOrder,
   verifyPayment,
-} from '../controllers/transaction.controller.js';
-import {
   getTransactions,
   getTransactionById,
   getTransactionStats,
