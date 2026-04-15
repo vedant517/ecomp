@@ -1,4 +1,4 @@
-import Offer from "../models/Offer.model.js";
+import Offer from "../models/offer.model.js";
 
 //  GET ALL OFFERS
 export const getAllOffers = async (req, res) => {
