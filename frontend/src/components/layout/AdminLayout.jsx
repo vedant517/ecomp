@@ -51,7 +51,7 @@ const navGroups = [
     title: 'Admin',
     items: [
       { icon: ShieldCheck, label: 'Admin role', path: '/roles' },
-      { icon: Lock, label: 'Control Authority', path: '/auth' },
+      
     ],
   },
 ];

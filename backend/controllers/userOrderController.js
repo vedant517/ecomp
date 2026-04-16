@@ -17,9 +17,27 @@ export const createOrder = async (req, res) => {
       });
     }
 
+    // Calculate shipping charge
+    let shippingPrice = req.body.shippingPrice;
+    const itemsPrice = req.body.itemsPrice || 0;
+    
+    if (shippingPrice === undefined || shippingPrice === null) {
+      if (itemsPrice < 500) {
+        shippingPrice = 50;
+      } else if (itemsPrice >= 500 && itemsPrice < 1000) {
+        shippingPrice = 30;
+      } else {
+        shippingPrice = 0;
+      }
+    }
+
+    const totalPrice = itemsPrice + shippingPrice + (req.body.taxPrice || 0);
+
     const orderData = {
       orderId: "#ORD" + Date.now(),
       ...req.body,
+      shippingPrice,
+      totalPrice,
       status: "Pending"
     };
 

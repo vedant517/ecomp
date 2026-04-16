@@ -26,13 +26,13 @@ import { formatINR } from '../../utils/currency';
 /* ── Status badge styles ── */
 const statusStyle = {
   Delivered: { background: '#e8f5ee', color: '#1a6b3c' },
-  Pending:   { background: '#e3f2fd', color: '#1565c0' },
-  Shipped:   { background: '#e8f5ee', color: '#1a6b3c' },
+  Pending: { background: '#e3f2fd', color: '#1565c0' },
+  Shipped: { background: '#e8f5ee', color: '#1a6b3c' },
   Cancelled: { background: '#fce8e8', color: '#c0392b' },
 };
 
 const paymentDot = {
-  Paid:   '#1a6b3c',
+  Paid: '#1a6b3c',
   Unpaid: '#e65100',
 };
 
@@ -79,7 +79,7 @@ function StatCard({ title, value, badge, badgeUp, sub, onClick, loading }) {
             whiteSpace: 'nowrap',
             lineHeight: 1,
             background: badgeUp ? '#dcfce7' : '#fee2e2',
-            color:      badgeUp ? '#166534' : '#991b1b',
+            color: badgeUp ? '#166534' : '#991b1b',
             display: 'flex',
             alignItems: 'center',
             gap: '3px',
@@ -147,25 +147,25 @@ function StatusUpdateModal({ order, onClose, onUpdate }) {
    MAIN ORDER MANAGEMENT PAGE
 ══════════════════════════════════════════════ */
 export default function OrderManagement() {
-  const [activeTab, setActiveTab]             = useState('All order');
-  const [searchQuery, setSearchQuery]         = useState('');
-  const [currentPage, setCurrentPage]         = useState(1);
+  const [activeTab, setActiveTab] = useState('All order');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
   const [showMoreActions, setShowMoreActions] = useState(false);
-  const [selectedOrder, setSelectedOrder]     = useState(null);
+  const [selectedOrder, setSelectedOrder] = useState(null);
 
-  const tabs         = ['All order', 'Completed', 'Pending', 'Canceled'];
+  const tabs = ['All order', 'Completed', 'Pending', 'Canceled'];
   const itemsPerPage = 6;
 
   const statusFilter =
     activeTab === 'Completed' ? 'Delivered' :
-    activeTab === 'Pending'   ? 'Pending'   :
-    activeTab === 'Canceled'  ? 'Cancelled' : null;
+      activeTab === 'Pending' ? 'Pending' :
+        activeTab === 'Canceled' ? 'Cancelled' : null;
 
   const { data: ordersResponse, isLoading: ordersLoading, error: ordersError } =
     useGetOrdersQuery(statusFilter);
   const { data: statsData, isLoading: statsLoading } = useGetOrderStatsQuery();
   const [updateStatus] = useUpdateOrderStatusMutation();
-  const [createOrder]  = useCreateOrderMutation();
+  const [createOrder] = useCreateOrderMutation();
 
   const handleManualOrder = async () => {
     try {
@@ -184,7 +184,7 @@ export default function OrderManagement() {
   };
 
   function getProductEmoji(productName) {
-    const map = { headphone:'🎧', shirt:'👕', wallet:'👛', pillow:'🛏', dumbbell:'🏋', coffee:'☕', cap:'🧢', webcam:'📷', bulb:'💡' };
+    const map = { headphone: '🎧', shirt: '👕', wallet: '👛', pillow: '🛏', dumbbell: '🏋', coffee: '☕', cap: '🧢', webcam: '📷', bulb: '💡' };
     const lower = productName?.toLowerCase() || '';
     for (const [key, emoji] of Object.entries(map)) if (lower.includes(key)) return emoji;
     return '📦';
@@ -194,29 +194,29 @@ export default function OrderManagement() {
     ordersResponse?.data?.map((order) => {
       const firstItem = order.orderItems?.[0] || {};
       return {
-        id:      order.orderId || order._id,
+        id: order.orderId || order._id,
         orderId: order.orderId,
         product: firstItem.name || 'Product Asset',
-        emoji:   getProductEmoji(firstItem.name),
-        date:    new Date(order.createdAt).toLocaleDateString('en-GB'),
-        price:   order.totalPrice || order.price || 0,
+        emoji: getProductEmoji(firstItem.name),
+        date: new Date(order.createdAt).toLocaleDateString('en-GB'),
+        price: order.totalPrice || order.price || 0,
         payment: order.isPaid ? 'Paid' : 'Unpaid',
-        status:  order.status || (order.isDelivered ? 'Delivered' : 'Pending'),
+        status: order.status || (order.isDelivered ? 'Delivered' : 'Pending'),
       };
     }) || [],
-  [ordersResponse]);
+    [ordersResponse]);
 
   const filteredOrders = useMemo(() =>
     orders.filter((o) =>
       (o.product?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
-      (o.id?.toLowerCase()      || '').includes(searchQuery.toLowerCase())
+      (o.id?.toLowerCase() || '').includes(searchQuery.toLowerCase())
     ),
-  [orders, searchQuery]);
+    [orders, searchQuery]);
 
-  const totalPages      = Math.ceil(filteredOrders.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
   const paginatedOrders = useMemo(() =>
     filteredOrders.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage),
-  [filteredOrders, currentPage]);
+    [filteredOrders, currentPage]);
 
   const handleUpdateStatus = async (orderId, newStatus) => {
     try {
@@ -291,10 +291,10 @@ export default function OrderManagement() {
         gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
         gap: '16px',
       }}>
-        <StatCard title="Total Orders"  value={statsData?.total     ?? 0} badge="14.4%" badgeUp        sub="Last 30 days"          onClick={() => setActiveTab('All order')} loading={statsLoading} />
-        <StatCard title="New Orders"    value={statsData?.pending   ?? 0} badge="20%"   badgeUp        sub="Needs processing"       onClick={() => setActiveTab('Pending')}   loading={statsLoading} />
-        <StatCard title="Completed"     value={statsData?.delivered ?? 0} badge="83%"   badgeUp        sub="Successfully delivered" onClick={() => setActiveTab('Completed')} loading={statsLoading} />
-        <StatCard title="Cancelled"     value={statsData?.cancelled ?? 0} badge="3.2%"  badgeUp={false} sub="Lost opportunities"    onClick={() => setActiveTab('Canceled')}  loading={statsLoading} />
+        <StatCard title="Total Orders" value={statsData?.total ?? 0} badge="14.4%" badgeUp sub="Last 30 days" onClick={() => setActiveTab('All order')} loading={statsLoading} />
+        <StatCard title="New Orders" value={statsData?.pending ?? 0} badge="20%" badgeUp sub="Needs processing" onClick={() => setActiveTab('Pending')} loading={statsLoading} />
+        <StatCard title="Completed" value={statsData?.delivered ?? 0} badge="83%" badgeUp sub="Successfully delivered" onClick={() => setActiveTab('Completed')} loading={statsLoading} />
+        <StatCard title="Cancelled" value={statsData?.cancelled ?? 0} badge="3.2%" badgeUp={false} sub="Lost opportunities" onClick={() => setActiveTab('Canceled')} loading={statsLoading} />
       </div>
 
       {/* ── Order Table Card ── */}
@@ -371,9 +371,9 @@ export default function OrderManagement() {
                     borderRadius: '9px', border: 'none',
                     cursor: 'pointer', whiteSpace: 'nowrap',
                     transition: 'all 0.15s',
-                    background: active ? 'white'   : 'transparent',
-                    color:      active ? '#059669' : '#94a3b8',
-                    boxShadow:  active ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
+                    background: active ? 'white' : 'transparent',
+                    color: active ? '#059669' : '#94a3b8',
+                    boxShadow: active ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
                   }}
                 >
                   {tab}
@@ -412,13 +412,13 @@ export default function OrderManagement() {
                 <thead>
                   <tr>
                     {[
-                      { label: '#',           align: 'left'   },
-                      { label: 'Order ID',    align: 'left'   },
-                      { label: 'Product',     align: 'left'   },
-                      { label: 'Date',        align: 'center' },
-                      { label: 'Price',       align: 'center' },
-                      { label: 'Payment',     align: 'center' },
-                      { label: 'Status',      align: 'center' },
+                      { label: '#', align: 'left' },
+                      { label: 'Order ID', align: 'left' },
+                      { label: 'Product', align: 'left' },
+                      { label: 'Date', align: 'center' },
+                      { label: 'Price', align: 'center' },
+                      { label: 'Payment', align: 'center' },
+                      { label: 'Status', align: 'center' },
                     ].map(({ label, align }) => (
                       <th key={label} style={{
                         padding: '14px 12px',
@@ -541,7 +541,7 @@ export default function OrderManagement() {
                           borderRadius: '10px', fontSize: '12px', fontWeight: 800,
                           border: currentPage === i + 1 ? 'none' : '1px solid #e2e8f0',
                           background: currentPage === i + 1 ? '#1a6b3c' : 'white',
-                          color:      currentPage === i + 1 ? 'white'   : '#64748b',
+                          color: currentPage === i + 1 ? 'white' : '#64748b',
                           cursor: 'pointer',
                         }}
                       >

@@ -44,6 +44,25 @@ export const orderApi = createApi({
         'OrderStats',
       ],
     }),
+    updateShippingInfo: builder.mutation({
+      query: ({ orderId, ...shippingData }) => ({
+        url: `/orders/${orderId}/shipping`,
+        method: 'PUT',
+        body: shippingData,
+      }),
+      invalidatesTags: (result, error, { orderId }) => [
+        { type: 'Order', id: orderId },
+        { type: 'Order', id: 'LIST' },
+        'OrderStats',
+      ],
+    }),
+    calculateShippingCharge: builder.mutation({
+      query: (amount) => ({
+        url: '/shipping/calculate',
+        method: 'POST',
+        body: { amount },
+      }),
+    }),
     createOrder: builder.mutation({
       query: (orderData) => ({
         url: '/user/orders',
@@ -60,4 +79,6 @@ export const {
   useGetOrderStatsQuery,
   useUpdateOrderStatusMutation,
   useCreateOrderMutation,
+  useUpdateShippingInfoMutation,
+  useCalculateShippingChargeMutation,
 } = orderApi;

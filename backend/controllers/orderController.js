@@ -46,11 +46,11 @@ export const updateOrder = async (req, res) => {
 
     // Handle stock decrease if status changes FROM Cancelled to something else
     if (order.status === "Cancelled" && status && status !== "Cancelled") {
-        for (const item of order.orderItems) {
-            await Product.findByIdAndUpdate(item.product, {
-              $inc: { stock: -item.qty }
-            });
-        }
+      for (const item of order.orderItems) {
+        await Product.findByIdAndUpdate(item.product, {
+          $inc: { stock: -item.qty }
+        });
+      }
     }
 
     // Update the order
@@ -93,7 +93,7 @@ export const getOrderStats = async (req, res) => {
     // Daily Sales (Last 7 Days) from Transactions
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    
+
     const dailySales = await Transaction.aggregate([
       { $match: { createdAt: { $gte: sevenDaysAgo }, status: "captured" } },
       {
@@ -141,7 +141,7 @@ export const getOrderStats = async (req, res) => {
       success: true,
       total,
       pending,
-      delivered, 
+      delivered,
       cancelled,
       totalRevenue: revenueStats[0]?.totalRevenue || 0,
       salesByCountry,

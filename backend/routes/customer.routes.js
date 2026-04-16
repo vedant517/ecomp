@@ -1,18 +1,15 @@
 import express from "express";
+import * as customerController from "../controllers/customer.controller.js";
+
 const router = express.Router();
-import {
-  getCustomerStats,
-  getAllCustomers,
-  getCustomerById
-} from "../controllers/customer.controller.js";
 
-// Dashboard stats
-router.get("/stats", getCustomerStats);
+// 📊 Dashboard stats
+router.get("/stats", customerController.getCustomerStats);
 
-// Customer table
-router.get("/", getAllCustomers);
+// 📋 Customer table
+router.get("/", customerController.getAllCustomers);
 
-// Single customer
-router.get("/:userId", getCustomerById);
+// 👤 Single customer
+router.get("/:userId", customerController.getCustomerById);
 
 export default router;
