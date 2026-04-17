@@ -64,5 +64,4 @@ transactionSchema.pre('save', function () {
   }
 });
 
-const Transaction = mongoose.model('Transaction', transactionSchema);
-export default Transaction;
+export default mongoose.models.Transaction || mongoose.model('Transaction', transactionSchema);

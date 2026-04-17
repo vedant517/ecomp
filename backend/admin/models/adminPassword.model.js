@@ -36,5 +36,4 @@ const passwordSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const AdminPassword = mongoose.model("AdminPassword", passwordSchema);
-export default AdminPassword;
+export default mongoose.models.AdminPassword || mongoose.model("AdminPassword", passwordSchema);

@@ -6,6 +6,9 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Please add a name'],
   },
+  username: {
+    type: String,
+  },
   email: {
     type: String,
     required: [true, 'Please add an email'],
@@ -17,6 +20,9 @@ const userSchema = new mongoose.Schema({
     required: [true, 'Please add a password'],
     minlength: 6,
     select: false,
+  },
+  mobile: {
+    type: String,
   },
   role: {
     type: String,
@@ -31,7 +37,7 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-});
+}, { timestamps: true });
 
 // Encrypt password using bcrypt
 userSchema.pre('save', async function () {
@@ -47,5 +53,4 @@ userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
-const User = mongoose.model('User', userSchema);
-export default User;
+export default mongoose.models.User || mongoose.model('User', userSchema);

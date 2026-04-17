@@ -40,6 +40,4 @@ const OfferSchema = new mongoose.Schema({
   },
 });
 
-const Offer = mongoose.model('Offer', OfferSchema);
-
-export default Offer;
+export default mongoose.models.Offer || mongoose.model('Offer', OfferSchema);

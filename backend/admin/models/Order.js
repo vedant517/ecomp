@@ -90,5 +90,4 @@ orderSchema.index({ user: 1 });
 orderSchema.index({ status: 1 });
 orderSchema.index({ createdAt: -1 });
 
-const Order = mongoose.model('Order', orderSchema);
-export default Order;
+export default mongoose.models.Order || mongoose.model('Order', orderSchema);
