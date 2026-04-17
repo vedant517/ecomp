@@ -16,7 +16,9 @@ import { formatCompactINR, formatINR } from '../../utils/currency';
 
 const Dashboard = () => {
   const dispatch = useDispatch();
-  const { data: statsData, isLoading: statsLoading } = useGetOrderStatsQuery();
+  const { data: statsData, isLoading: statsLoading } = useGetOrderStatsQuery(undefined, {
+    pollingInterval: 30000, // Refresh every 30 seconds for real-time feel
+  });
   const { data: customerStats, isLoading: customerLoading } = useGetCustomerStatsQuery();
   const { data: ordersData, isLoading: ordersLoading } = useGetOrdersQuery();
 
@@ -273,8 +275,8 @@ const Dashboard = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
                 <p style={{ fontSize: '11px', fontWeight: '700', color: '#3b82f6', margin: 0 }}>Users in last 30 minutes</p>
-                <div style={{ fontSize: '22px', fontWeight: '700', color: '#1e293b', marginTop: '4px' }}>{(ordersData?.data || []).filter(o => new Date(o.createdAt) > new Date(Date.now() - 30 * 60 * 1000)).length}</div>
-                <p style={{ fontSize: '10px', color: '#94a3b8', margin: '4px 0 0' }}>Orders in recent window</p>
+                <div style={{ fontSize: '22px', fontWeight: '700', color: '#1e293b', marginTop: '4px' }}>{statsLoading ? '...' : (statsData?.activeUsers30m || 0)}</div>
+                <p style={{ fontSize: '10px', color: '#94a3b8', margin: '4px 0 0' }}>Live active users</p>
               </div>
               <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8' }}><MoreVertical size={15} /></button>
             </div>
@@ -298,8 +300,8 @@ const Dashboard = () => {
               ) : (statsData?.salesByCountry || []).length > 0 ? (
                 statsData.salesByCountry.map((item, idx) => (
                   <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                     <span style={{ fontSize: '11px', fontWeight: '600', color: '#64748b' }}>{item._id || 'Unknown'}</span>
-                     <span style={{ fontSize: '11px', fontWeight: '700', color: '#1e293b' }}>{formatINR(item.revenue)}</span>
+                    <span style={{ fontSize: '11px', fontWeight: '600', color: '#64748b' }}>{item._id || 'Unknown'}</span>
+                    <span style={{ fontSize: '11px', fontWeight: '700', color: '#1e293b' }}>{formatINR(item.revenue)}</span>
                   </div>
                 ))
               ) : (
@@ -363,7 +365,7 @@ const Dashboard = () => {
         {/* Top Products */}
         <div style={{ ...card, minWidth: 0 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-            <p style={{ fontSize: '12px', fontWeight: '700', color: '#1e293b', margin: 0 }}>Top Products</p>
+            <p style={{ fontSize: '12px', fontWeight: '700', color: '#1e293b', margin: 0 }}>Top Products (This Week)</p>
             <span style={{ fontSize: '10px', color: '#3b82f6', cursor: 'pointer', fontWeight: '600' }}>All product</span>
           </div>
           <div style={{ position: 'relative', marginBottom: '14px' }}>
@@ -373,15 +375,15 @@ const Dashboard = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {statsLoading ? (
               <p style={{ fontSize: '11px', color: '#94a3b8', textAlign: 'center' }}>Analyzing inventory trends...</p>
-            ) : (statsData?.topProducts || []).slice(0, 4).map((p, i) => (
+            ) : (statsData?.topProductsThisWeek || []).slice(0, 4).map((p, i) => (
               <div key={p._id || i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}>
                   <div style={{ width: '32px', height: '32px', borderRadius: '6px', border: '1px solid #f1f5f9', background: '#f8fafc', overflow: 'hidden', flexShrink: 0, padding: '2px', boxSizing: 'border-box' }}>
-                    <img 
-                      src={p.image && p.image.startsWith('http') ? p.image : `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=10b981&color=fff&bold=true`} 
-                      alt={p.name} 
+                    <img
+                      src={p.image && p.image.startsWith('http') ? p.image : `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=10b981&color=fff&bold=true`}
+                      alt={p.name}
                       onError={(e) => { e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=10b981&color=fff&bold=true` }}
-                      style={{ width: '100%', height: '100%', objectFit: 'contain' }} 
+                      style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                     />
                   </div>
                   <div style={{ minWidth: 0 }}>
@@ -419,29 +421,29 @@ const Dashboard = () => {
                 {statsLoading ? (
                   <tr><td colSpan="4" style={{ padding: '20px', textAlign: 'center' }}>Fetching performance metrics...</td></tr>
                 ) : (statsData?.topProducts || []).slice(0, 5).map((p, i) => (
-                    <tr key={p._id || i} style={{ borderBottom: '1px solid #f8fafc' }}>
-                      <td style={{ padding: '11px 12px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
-                          <div style={{ width: '28px', height: '28px', borderRadius: '5px', border: '1px solid #f1f5f9', background: '#f8fafc', overflow: 'hidden', flexShrink: 0, padding: '2px', boxSizing: 'border-box' }}>
-                            <img 
-                              src={p.image && p.image.startsWith('http') ? p.image : `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=10b981&color=fff&bold=true`} 
-                              alt={p.name} 
-                              onError={(e) => { e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=10b981&color=fff&bold=true` }}
-                              style={{ width: '100%', height: '100%', objectFit: 'contain' }} 
-                            />
-                          </div>
-                          <span style={{ fontSize: '11px', fontWeight: '600', color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '140px' }}>{p.name}</span>
+                  <tr key={p._id || i} style={{ borderBottom: '1px solid #f8fafc' }}>
+                    <td style={{ padding: '11px 12px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
+                        <div style={{ width: '28px', height: '28px', borderRadius: '5px', border: '1px solid #f1f5f9', background: '#f8fafc', overflow: 'hidden', flexShrink: 0, padding: '2px', boxSizing: 'border-box' }}>
+                          <img
+                            src={p.image && p.image.startsWith('http') ? p.image : `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=10b981&color=fff&bold=true`}
+                            alt={p.name}
+                            onError={(e) => { e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=10b981&color=fff&bold=true` }}
+                            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                          />
                         </div>
-                      </td>
-                      <td style={{ padding: '11px 12px', color: '#64748b', fontWeight: '800' }}>{p.totalQty}</td>
-                      <td style={{ padding: '11px 12px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', fontWeight: '700', color: '#10b981' }}>
-                          <span style={{ width: '6px', height: '6px', borderRadius: '50%', flexShrink: 0, background: '#10b981' }}></span>
-                          ACTIVE
-                        </div>
-                      </td>
-                      <td style={{ padding: '11px 12px', textAlign: 'right', fontWeight: '700' }}>{formatINR(p.totalRevenue)}</td>
-                    </tr>
+                        <span style={{ fontSize: '11px', fontWeight: '600', color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '140px' }}>{p.name}</span>
+                      </div>
+                    </td>
+                    <td style={{ padding: '11px 12px', color: '#64748b', fontWeight: '800' }}>{p.totalQty}</td>
+                    <td style={{ padding: '11px 12px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', fontWeight: '700', color: '#10b981' }}>
+                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', flexShrink: 0, background: '#10b981' }}></span>
+                        ACTIVE
+                      </div>
+                    </td>
+                    <td style={{ padding: '11px 12px', textAlign: 'right', fontWeight: '700' }}>{formatINR(p.totalRevenue)}</td>
+                  </tr>
                 ))}
               </tbody>
             </table>
@@ -468,7 +470,7 @@ const Dashboard = () => {
             {displayCategories.slice(0, 3).map((c, i) => (
               <div key={c._id || i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid #f1f5f9', borderRadius: '10px', padding: '7px 8px', cursor: 'pointer', gap: '6px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
-                    <div style={{ width: '28px', height: '28px', borderRadius: '6px', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <div style={{ width: '28px', height: '28px', borderRadius: '6px', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <img
                       src={c.image && c.image.startsWith('http') ? c.image : 'https://cdn-icons-png.flaticon.com/512/3081/3081559.png'}
                       alt={c.name}
@@ -492,11 +494,11 @@ const Dashboard = () => {
               <div key={p._id || i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
                   <div style={{ width: '28px', height: '28px', borderRadius: '6px', border: '1px solid #f1f5f9', background: '#f8fafc', overflow: 'hidden', flexShrink: 0, padding: '2px', boxSizing: 'border-box' }}>
-                    <img 
-                      src={p.image && p.image.startsWith('http') ? p.image : `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=10b981&color=fff&bold=true`} 
-                      alt="" 
+                    <img
+                      src={p.image && p.image.startsWith('http') ? p.image : `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=10b981&color=fff&bold=true`}
+                      alt=""
                       onError={(e) => { e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=10b981&color=fff&bold=true` }}
-                      style={{ width: '100%', height: '100%', objectFit: 'contain' }} 
+                      style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                     />
                   </div>
                   <div style={{ minWidth: 0 }}>

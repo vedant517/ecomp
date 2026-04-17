@@ -2,9 +2,7 @@ import React, { useEffect, useState } from "react";
 import { toast, Toaster } from "react-hot-toast";
 import { useSelector } from "react-redux";
 
-/* ─────────────────────────────────────────────
-   Inline styles as JS objects – no extra deps
-───────────────────────────────────────────── */
+
 const S = {
   page: {
     minHeight: "100vh",
@@ -168,7 +166,7 @@ const S = {
   },
 };
 
-/* ── Controlled input with focus ring ── */
+
 function Field({ label, children }) {
   return (
     <div>
@@ -215,9 +213,7 @@ function PwInput({ value, onChange, placeholder }) {
   );
 }
 
-/* ══════════════════════════════════════════
-   Main Component
-══════════════════════════════════════════ */
+
 const AdminProfile = () => {
   const token = useSelector((state) => state.auth.token);
 
@@ -238,16 +234,10 @@ const AdminProfile = () => {
     countryCode: "",
     dateOfBirth: "",
     address: { street: "", city: "", state: "", country: "", postalCode: "" },
-    socialMedia: {
-      linkedin: "",
-      twitter: "",
-      github: "",
-      instagram: "",
-      facebook: "",
-    },
+    
   });
 
-  /* ── Fetch profile ── */
+  
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -274,13 +264,7 @@ const AdminProfile = () => {
               country: data.data.address?.country || "",
               postalCode: data.data.address?.postalCode || "",
             },
-            socialMedia: {
-              linkedin: data.data.socialMedia?.linkedin || "",
-              twitter: data.data.socialMedia?.twitter || "",
-              github: data.data.socialMedia?.github || "",
-              instagram: data.data.socialMedia?.instagram || "",
-              facebook: data.data.socialMedia?.facebook || "",
-            },
+            
           });
         } else {
           toast.error(data.message);
@@ -294,7 +278,7 @@ const AdminProfile = () => {
     fetchProfile();
   }, [token]);
 
-  /* ── Handlers ── */
+ 
   const handleChange = (e) =>
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
   const handleAddressChange = (e) =>
@@ -302,13 +286,9 @@ const AdminProfile = () => {
       ...f,
       address: { ...f.address, [e.target.name]: e.target.value },
     }));
-  const handleSocialChange = (e) =>
-    setForm((f) => ({
-      ...f,
-      socialMedia: { ...f.socialMedia, [e.target.name]: e.target.value },
-    }));
+ 
 
-  /* ── Update profile ── */
+  
   const handleUpdate = async () => {
     setSaving(true);
     try {
@@ -334,7 +314,7 @@ const AdminProfile = () => {
     }
   };
 
-  /* ── Update password ── */
+ 
   const handlePasswordUpdate = async () => {
     if (!currentPassword) {
       toast.error("Enter your current password");
@@ -377,7 +357,7 @@ const AdminProfile = () => {
     }
   };
 
-  /* ── Image upload ── */
+ 
   const handleImageUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -427,7 +407,7 @@ const AdminProfile = () => {
     }
   };
 
-  /* ── Derived ── */
+ 
   if (loading) {
     return (
       <div
@@ -461,18 +441,7 @@ const AdminProfile = () => {
       <div style={S.avatar(size, size * 0.33)}>{initials}</div>
     );
 
-  const socialLinked = Object.entries(form.socialMedia)
-    .filter(([, v]) => v)
-    .map(([k]) => k);
-
-  const socialIcons = {
-    linkedin: "in",
-    twitter: "𝕏",
-    github: "gh",
-    instagram: "ig",
-    facebook: "fb",
-  };
-
+ 
   return (
     <div style={S.page}>
       <Toaster
@@ -521,44 +490,14 @@ const AdminProfile = () => {
 
             <hr style={S.hr} />
 
-            <p
-              style={{
-                fontSize: 11,
-                color: "#bbb",
-                marginBottom: 8,
-                fontWeight: 500,
-              }}
-            >
-              Linked accounts
-            </p>
+            
 
-            {socialLinked.length > 0 ? (
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                {socialLinked.map((k) => (
-                  <span key={k} style={S.chip}>
-                    {socialIcons[k]} {k}
-                  </span>
-                ))}
-              </div>
-            ) : (
-              <p style={{ fontSize: 12, color: "#ccc", marginBottom: 4 }}>
-                No accounts linked yet
-              </p>
-            )}
+            
 
-            <button
-              style={{ ...S.btnGhost, marginTop: 10, display: "block" }}
-              onClick={() =>
-                document
-                  .getElementById("social-section")
-                  ?.scrollIntoView({ behavior: "smooth" })
-              }
-            >
-              + Add social media
-            </button>
+            
           </div>
 
-          {/* ── Change password ── */}
+         
           <div style={S.card}>
             <div
               style={{
@@ -614,9 +553,9 @@ const AdminProfile = () => {
           </div>
         </div>
 
-        {/* ══ RIGHT COLUMN ══ */}
+        
         <div style={S.card}>
-          {/* Header */}
+          
           <div
             style={{
               display: "flex",
@@ -637,7 +576,7 @@ const AdminProfile = () => {
             </button>
           </div>
 
-          {/* Avatar upload row */}
+          
           <div
             style={{
               display: "flex",
@@ -690,7 +629,7 @@ const AdminProfile = () => {
 
           </div>
 
-          {/* ── Basic Info ── */}
+          
           <p style={S.sectionLabel}>Basic info</p>
           <div style={S.row2}>
             <Field label="First name">
@@ -757,7 +696,7 @@ const AdminProfile = () => {
             </Field>
           </div>
 
-          {/* ── Address ── */}
+          
           <p style={S.sectionLabel}>Address</p>
           <div style={S.row2}>
             <Field label="Street address">
@@ -802,52 +741,8 @@ const AdminProfile = () => {
             </Field>
           </div>
 
-          {/* ── Social Media ── */}
-          <p id="social-section" style={S.sectionLabel}>
-            Social media
-          </p>
-          <div style={S.row2}>
-            <Field label="LinkedIn">
-              <TextInput
-                name="linkedin"
-                value={form.socialMedia.linkedin}
-                onChange={handleSocialChange}
-                placeholder="linkedin.com/in/..."
-              />
-            </Field>
-            <Field label="GitHub">
-              <TextInput
-                name="github"
-                value={form.socialMedia.github}
-                onChange={handleSocialChange}
-                placeholder="github.com/..."
-              />
-            </Field>
-            <Field label="Twitter / X">
-              <TextInput
-                name="twitter"
-                value={form.socialMedia.twitter}
-                onChange={handleSocialChange}
-                placeholder="@username"
-              />
-            </Field>
-            <Field label="Instagram">
-              <TextInput
-                name="instagram"
-                value={form.socialMedia.instagram}
-                onChange={handleSocialChange}
-                placeholder="@username"
-              />
-            </Field>
-            <Field label="Facebook">
-              <TextInput
-                name="facebook"
-                value={form.socialMedia.facebook}
-                onChange={handleSocialChange}
-                placeholder="facebook.com/..."
-              />
-            </Field>
-          </div>
+          
+         
 
           {/* Footer action */}
           <div

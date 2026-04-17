@@ -1,6 +1,7 @@
 import Order from "../models/Order.js";
 import Transaction from "../models/Transaction.js";
 import Product from "../models/Product.js";
+import User from "../models/User.js";
 
 // GET ALL ORDERS
 export const getOrders = async (req, res) => {
@@ -137,6 +138,27 @@ export const getOrderStats = async (req, res) => {
       { $limit: 8 }
     ]);
 
+    // Top Selling Products THIS WEEK
+    const topProductsThisWeek = await Order.aggregate([
+      { $match: { _id: { $in: capturedOrderIds }, createdAt: { $gte: sevenDaysAgo } } },
+      { $unwind: "$orderItems" },
+      {
+        $group: {
+          _id: "$orderItems.product",
+          name: { $first: "$orderItems.name" },
+          image: { $first: "$orderItems.image" },
+          totalQty: { $sum: "$orderItems.qty" },
+          totalRevenue: { $sum: { $multiply: ["$orderItems.qty", "$orderItems.price"] } }
+        }
+      },
+      { $sort: { totalQty: -1 } },
+      { $limit: 8 }
+    ]);
+
+    // Active Users (last 30 minutes)
+    const thirtyMinsAgo = new Date(Date.now() - 30 * 60 * 1000);
+    const activeUsers30m = await User.countDocuments({ lastActive: { $gte: thirtyMinsAgo } });
+
     res.json({
       success: true,
       total,
@@ -147,7 +169,9 @@ export const getOrderStats = async (req, res) => {
       salesByCountry,
       dailySales,
       hourlyOrders,
-      topProducts
+      topProducts,
+      topProductsThisWeek,
+      activeUsers30m
     });
   } catch (err) {
     res.status(500).json({ message: err.message });

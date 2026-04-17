@@ -16,13 +16,10 @@ const adminProfileSchema = new mongoose.Schema(
 
     phoneNumber: { type: String, default: "" },
 
-    // Date of Birth
     dateOfBirth: { type: Date, default: null },
 
-    // Country Code (cc)
     countryCode: { type: String, default: "" },
 
-    // Address object
     address: {
       street: { type: String, default: "" },
       city: { type: String, default: "" },
@@ -35,27 +32,15 @@ const adminProfileSchema = new mongoose.Schema(
 
     biography: { type: String, default: "" },
 
-    // Social Media Links
-    socialMedia: {
-      linkedin: { type: String, default: "" },
-      twitter: { type: String, default: "" },
-      github: { type: String, default: "" },
-      instagram: { type: String, default: "" },
-      facebook: { type: String, default: "" },
-      website: { type: String, default: "" },
-    },
+    // ❌ REMOVED socialMedia completely
 
-    // Credit Card (SAFE - no sensitive storage)
     creditCard: {
       cardHolderName: { type: String, default: "" },
-
-      last4: { type: String, default: "" }, // only last 4 digits
-      brand: { type: String, default: "" }, // Visa, MasterCard, etc.
-
+      last4: { type: String, default: "" },
+      brand: { type: String, default: "" },
       expiryMonth: { type: String, default: "" },
       expiryYear: { type: String, default: "" },
-
-      paymentToken: { type: String, default: "" }, // from Razorpay/Stripe
+      paymentToken: { type: String, default: "" },
     },
 
     role: {

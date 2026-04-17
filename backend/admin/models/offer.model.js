@@ -7,6 +7,10 @@ const OfferSchema = new mongoose.Schema({
     ref: 'Product',
     required: true,
   },
+  variantId: {
+    type: String, // Storing as String since it's an ID within the Product variants array
+    required: false,
+  },
   name: {
     type: String,
     required: true,

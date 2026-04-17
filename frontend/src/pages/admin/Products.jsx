@@ -19,6 +19,7 @@ const Products = () => {
   const { categories } = useSelector((s) => s.categories);
 
   const [search, setSearch]             = useState('');
+  const [filterType, setFilterType]     = useState('All Stock');
   const [deleteConfirm, setDeleteConfirm] = useState(null);
 
   useEffect(() => {
@@ -38,14 +39,20 @@ const Products = () => {
     setDeleteConfirm(null);
   };
 
-  const filtered = (products || []).filter((p) =>
-    (p?.name || '').toLowerCase().includes((search || '').toLowerCase())
-  );
+  const filtered = (products || []).filter((p) => {
+    const matchesSearch = (p?.name || '').toLowerCase().includes((search || '').toLowerCase());
+    if (!matchesSearch) return false;
+
+    if (filterType === 'Low Inventory') return (p.stock || 0) > 0 && (p.stock || 0) <= 10;
+    if (filterType === 'Out of Stock') return (p.stock || 0) === 0;
+
+    return true; // All Stock
+  });
 
   return (
     <div className="flex-1 min-w-0" style={{ display: 'flex', flexDirection: 'column', gap: '24px', padding: '24px' }}>
 
-      {/* ── Header ── */}
+      {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <div style={{ width: '48px', height: '48px', background: '#10b981', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -72,15 +79,16 @@ const Products = () => {
         </div>
       </div>
 
-      {/* ── Table Card ── */}
+      {/* Table Card */}
       <div style={{ background: 'white', borderRadius: '24px', border: '1px solid #f1f5f9', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
 
         {/* Toolbar */}
         <div style={{ padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', borderBottom: '1px solid #f8fafc', background: 'rgba(248,250,252,0.5)' }}>
           <div style={{ display: 'flex', gap: '4px', background: '#f1f5f9', padding: '4px', borderRadius: '14px' }}>
-            {['All Stock', 'Low Inventory', 'Out of Stock'].map((tab, i) => (
+            {['All Stock', 'Low Inventory', 'Out of Stock'].map((tab) => (
               <button key={tab}
-                style={{ padding: '8px 18px', borderRadius: '10px', fontSize: '13px', fontWeight: i === 0 ? 800 : 600, border: 'none', cursor: 'pointer', transition: 'all 0.15s', background: i === 0 ? 'white' : 'transparent', color: i === 0 ? '#10b981' : '#64748b', boxShadow: i === 0 ? '0 1px 4px rgba(0,0,0,0.08)' : 'none', whiteSpace: 'nowrap' }}>
+                onClick={() => setFilterType(tab)}
+                style={{ padding: '8px 18px', borderRadius: '10px', fontSize: '13px', fontWeight: filterType === tab ? 800 : 600, border: 'none', cursor: 'pointer', transition: 'all 0.15s', background: filterType === tab ? 'white' : 'transparent', color: filterType === tab ? '#10b981' : '#64748b', boxShadow: filterType === tab ? '0 1px 4px rgba(0,0,0,0.08)' : 'none', whiteSpace: 'nowrap' }}>
                 {tab}
               </button>
             ))}
@@ -208,7 +216,7 @@ const Products = () => {
         {/* Pagination Footer */}
         <div style={{ padding: '20px 24px', background: 'rgba(248,250,252,0.5)', borderTop: '1px solid #f8fafc', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
           <p style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#94a3b8', margin: 0 }}>
-            Records <span style={{ color: '#0f172a' }}>1 – {filtered.length}</span> of {products.length} entries
+            Records <span style={{ color: '#0f172a' }}>1 - {filtered.length}</span> of {products.length} entries
           </p>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <button style={{ padding: '8px 18px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#94a3b8', cursor: 'not-allowed', opacity: 0.5 }}>Previous</button>
@@ -221,7 +229,7 @@ const Products = () => {
         </div>
       </div>
 
-      {/* ── Delete Confirm Modal ── */}
+      {/* Delete Confirm Modal */}
       {deleteConfirm && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(8px)' }}>
           <div style={{ background: 'white', padding: '40px', borderRadius: '28px', boxShadow: '0 32px 80px rgba(0,0,0,0.2)', maxWidth: '360px', width: '100%', textAlign: 'center' }}>
@@ -244,7 +252,7 @@ const Products = () => {
         </div>
       )}
 
-      {/* ── Success Toast ── */}
+      {/* Success Toast */}
       {successMessage && (
         <div style={{ position: 'fixed', bottom: '32px', right: '32px', zIndex: 1000, background: '#10b981', color: 'white', padding: '16px 24px', borderRadius: '16px', boxShadow: '0 8px 24px rgba(16,185,129,0.3)', display: 'flex', alignItems: 'center', gap: '12px' }}>
           <CheckCircle2 size={22} />

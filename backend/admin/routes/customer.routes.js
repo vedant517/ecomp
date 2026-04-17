@@ -3,13 +3,13 @@ import * as customerController from "../controllers/customer.controller.js";
 
 const router = express.Router();
 
-// 📊 Dashboard stats
+//  Dashboard stats
 router.get("/stats", customerController.getCustomerStats);
 
-// 📋 Customer table
+//  Customer table
 router.get("/", customerController.getAllCustomers);
 
-// 👤 Single customer
+//  Single customer
 router.get("/:userId", customerController.getCustomerById);
 
 export default router;

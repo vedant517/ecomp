@@ -197,6 +197,8 @@ export default function OrderManagement() {
         id: order.orderId || order._id,
         orderId: order.orderId,
         product: firstItem.name || 'Product Asset',
+        variant: firstItem.variant || '',
+        image: firstItem.image,
         emoji: getProductEmoji(firstItem.name),
         date: new Date(order.createdAt).toLocaleDateString('en-GB'),
         price: order.totalPrice || order.price || 0,
@@ -463,16 +465,28 @@ export default function OrderManagement() {
                         <td style={{ padding: '14px 12px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                             <div style={{
-                              width: '36px', height: '36px', flexShrink: 0,
+                              width: '40px', height: '40px', flexShrink: 0,
                               background: '#f1f5f9', borderRadius: '10px',
+                              overflow: 'hidden',
                               display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              fontSize: '18px', border: '1px solid #e2e8f0',
+                              border: '1px solid #e2e8f0',
                             }}>
-                              {o.emoji}
+                              {o.image ? (
+                                <img src={o.image} alt={o.product} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              ) : (
+                                <span style={{ fontSize: '18px' }}>{o.emoji}</span>
+                              )}
                             </div>
-                            <span style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b', maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                              {o.product}
-                            </span>
+                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                              <span style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b', maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {o.product}
+                              </span>
+                              {o.variant && (
+                                <span style={{ fontSize: '10px', fontWeight: 600, color: '#64748b' }}>
+                                  Variant: {o.variant}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </td>
                         <td style={{ padding: '14px 12px', fontSize: '11px', fontWeight: 600, color: '#64748b', textAlign: 'center', whiteSpace: 'nowrap' }}>

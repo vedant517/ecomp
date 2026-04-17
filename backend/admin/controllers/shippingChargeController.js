@@ -1,11 +1,6 @@
 import Order from "../models/Order.js";
 
-/**
- * Calculate shipping charges based on order amount
- * Rules:
- * - Below 500 INR: 50 INR shipping
- * - 500 INR and above: Free shipping
- */
+
 export const calculateShippingCharge = (req, res) => {
   try {
     const { amount } = req.body;

@@ -35,7 +35,7 @@ export const updateProfile = async (req, res) => {
       countryCode: req.body.countryCode,
       dateOfBirth: req.body.dateOfBirth,
       address: req.body.address,
-      socialMedia: req.body.socialMedia,
+      // ❌ REMOVED socialMedia
       creditCard: req.body.creditCard,
     };
 
@@ -51,7 +51,10 @@ export const updateProfile = async (req, res) => {
     );
 
     if (!profile) {
-      return res.status(404).json({ success: false, message: "Profile not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Profile not found",
+      });
     }
 
     res.json({ success: true, data: profile });

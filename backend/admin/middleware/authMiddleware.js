@@ -31,6 +31,10 @@ export const protect = async (req, res, next) => {
       return res.status(401).json({ message: 'User not found' });
     }
 
+    if (user && user.constructor.modelName === 'User') {
+      await User.findByIdAndUpdate(user._id, { lastActive: Date.now() });
+    }
+
     req.user = user;
     next();
   } catch (error) {
