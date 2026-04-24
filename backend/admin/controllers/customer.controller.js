@@ -1,4 +1,5 @@
 import Order from "../models/Order.js";
+import mongoose from "mongoose";
 
 // ✅ 1. CUSTOMER DASHBOARD STATS
 export const getCustomerStats = async (req, res) => {
@@ -8,14 +9,14 @@ export const getCustomerStats = async (req, res) => {
 
     // 🧑 Total Customers
     const totalCustomers = await Order.aggregate([
-      { $group: { _id: "$userId" } },
+      { $group: { _id: "$user" } },
       { $count: "total" }
     ]);
 
     // 🆕 New Customers
     const newCustomers = await Order.aggregate([
       { $match: { createdAt: { $gte: lastWeek } } },
-      { $group: { _id: "$userId" } },
+      { $group: { _id: "$user" } },
       { $count: "total" }
     ]);
 
@@ -23,7 +24,7 @@ export const getCustomerStats = async (req, res) => {
     const repeatCustomers = await Order.aggregate([
       {
         $group: {
-          _id: "$userId",
+          _id: "$user",
           orderCount: { $sum: 1 }
         }
       },
@@ -33,12 +34,11 @@ export const getCustomerStats = async (req, res) => {
 
     res.json({
       success: true,
-      data: {
-        totalCustomers: totalCustomers[0]?.total || 0,
-        newCustomers: newCustomers[0]?.total || 0,
-        repeatCustomers: repeatCustomers[0]?.total || 0
-      }
+      totalCustomers: totalCustomers[0]?.total || 0,
+      newCustomers: newCustomers[0]?.total || 0,
+      repeatCustomers: repeatCustomers[0]?.total || 0
     });
+
 
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -57,24 +57,36 @@ export const getAllCustomers = async (req, res) => {
 
     const skip = (page - 1) * limit;
 
-    // 🔍 Search filter
-    const matchStage = search
-      ? {
-          customerName: { $regex: search, $options: "i" }
-        }
-      : {};
-
     const customers = await Order.aggregate([
-      { $match: matchStage },
-
       {
         $group: {
-          _id: "$userId",
-          name: { $first: "$customerName" },
+          _id: "$user",
           orderCount: { $sum: 1 },
-          totalSpend: { $sum: "$amount" },
+          totalSpend: { $sum: "$totalPrice" },
           lastOrderDate: { $max: "$createdAt" }
         }
+      },
+      // Lookup user details
+      {
+        $lookup: {
+          from: "users",
+          localField: "_id",
+          foreignField: "_id",
+          as: "userDetails"
+        }
+      },
+      { $unwind: { path: "$userDetails", preserveNullAndEmptyArrays: true } },
+      {
+        $addFields: {
+          name: "$userDetails.name",
+          email: "$userDetails.email"
+        }
+      },
+      // 🔍 Search filter
+      {
+        $match: search 
+          ? { name: { $regex: search, $options: "i" } }
+          : {}
       },
 
       // ⭐ Status Logic
@@ -102,8 +114,8 @@ export const getAllCustomers = async (req, res) => {
     ]);
 
     // 🔢 Total count for pagination
-    const total = await Order.aggregate([
-      { $group: { _id: "$userId" } },
+    const totalCountResult = await Order.aggregate([
+      { $group: { _id: "$user" } },
       { $count: "total" }
     ]);
 
@@ -111,9 +123,9 @@ export const getAllCustomers = async (req, res) => {
       success: true,
       data: customers,
       pagination: {
-        total: total[0]?.total || 0,
+        total: totalCountResult[0]?.total || 0,
         page,
-        pages: Math.ceil((total[0]?.total || 0) / limit)
+        pages: Math.ceil((totalCountResult[0]?.total || 0) / limit)
       }
     });
 
@@ -130,22 +142,37 @@ export const getCustomerById = async (req, res) => {
     const { userId } = req.params;
 
     const customer = await Order.aggregate([
-      { $match: { userId } },
+      { $match: { user: new mongoose.Types.ObjectId(userId) } },
 
       {
         $group: {
-          _id: "$userId",
-          name: { $first: "$customerName" },
+          _id: "$user",
           orderCount: { $sum: 1 },
-          totalSpend: { $sum: "$amount" },
+          totalSpend: { $sum: "$totalPrice" },
           orders: {
             $push: {
               orderId: "$orderId",
-              amount: "$amount",
+              amount: "$totalPrice",
               status: "$status",
               date: "$createdAt"
             }
           }
+        }
+      },
+      // Lookup user details
+      {
+        $lookup: {
+          from: "users",
+          localField: "_id",
+          foreignField: "_id",
+          as: "userDetails"
+        }
+      },
+      { $unwind: { path: "$userDetails", preserveNullAndEmptyArrays: true } },
+      {
+        $addFields: {
+          name: "$userDetails.name",
+          email: "$userDetails.email"
         }
       }
     ]);

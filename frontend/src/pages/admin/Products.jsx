@@ -178,7 +178,16 @@ const Products = () => {
                       </div>
                     </td>
                     <td style={{ padding: '16px 20px', textAlign: 'center' }}>
-                      <span style={{ fontSize: '18px', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.02em' }}>{formatINR(product.price)}</span>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        {product.discountPrice && product.discountPrice > 0 ? (
+                          <>
+                            <span style={{ fontSize: '18px', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.02em' }}>{formatINR(product.discountPrice)}</span>
+                            <span style={{ fontSize: '12px', fontWeight: 500, color: '#94a3b8', textDecoration: 'line-through' }}>{formatINR(product.price)}</span>
+                          </>
+                        ) : (
+                          <span style={{ fontSize: '18px', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.02em' }}>{formatINR(product.price)}</span>
+                        )}
+                      </div>
                     </td>
                     <td style={{ padding: '16px 20px', textAlign: 'center' }}>
                       <span style={{
@@ -216,7 +225,7 @@ const Products = () => {
         {/* Pagination Footer */}
         <div style={{ padding: '20px 24px', background: 'rgba(248,250,252,0.5)', borderTop: '1px solid #f8fafc', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
           <p style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#94a3b8', margin: 0 }}>
-            Records <span style={{ color: '#0f172a' }}>1 - {filtered.length}</span> of {products.length} entries
+            Records <span style={{ color: '#0f172a' }}>1 - {filtered.length}</span> of {(products || []).length} entries
           </p>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <button style={{ padding: '8px 18px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#94a3b8', cursor: 'not-allowed', opacity: 0.5 }}>Previous</button>

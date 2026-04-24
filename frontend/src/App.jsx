@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import AdminLayout from './components/layout/AdminLayout';
 import ProductMedia from './pages/admin/productMedia';
 import AdminProfile from './pages/admin/adminprofile';
+import Coupons from'./pages/admin/Coupons';   
 
 // Lazy load components
 const Dashboard = lazy(() => import('./pages/admin/Dashboard'));
@@ -17,7 +18,6 @@ const Transactions = lazy(() => import('./pages/admin/Transactions'));
 const Customers = lazy(() => import('./pages/admin/Customers'));
 const ProductReviews = lazy(() => import('./pages/admin/ProductReviews'));
 const ProductReviewPage = lazy(() => import('./pages/user/ProductReviewPage'));
-
 
 const LoadingSpinner = () => (
   <div className="flex-1 flex items-center justify-center min-h-[400px]">
@@ -66,7 +66,8 @@ function App() {
             <Route path="/media" element={<ProductMedia />} />
             <Route path="/reviews" element={<ProductReviews />} />
             <Route path="/roles" element={<AdminProfile />} />
-            <Route path="*" element={<div className="p-8 text-slate-400 text-center">Page under construction</div>} />
+            <Route path="/coupons" element={<Coupons />} />     
+            <Route path="*" element={<div className="p-8 text-slate-400 text-center"></div>} />
           </Route>
 
           {/* Fallback */}

@@ -1,5 +1,6 @@
 import Order from "../models/Order.js";
 import Product from "../models/Product.js";
+import Transaction from "../models/Transaction.js";
 
 // CREATE ORDER
 export const createOrder = async (req, res) => {
@@ -10,16 +11,32 @@ export const createOrder = async (req, res) => {
       return res.status(400).json({ message: "No order items" });
     }
 
-    // Update stock for each product
+    // Calculate items price securely and GST
+    let calculatedItemsPrice = 0;
+    
+    // We recreate orderItems with secure prices from the DB
+    const secureOrderItems = [];
+
     for (const item of orderItems) {
+      const product = await Product.findById(item.product);
+      const priceToUse = product ? product.price : item.price;
+      
+      secureOrderItems.push({
+        ...item,
+        price: priceToUse
+      });
+      
+      calculatedItemsPrice += (priceToUse * item.qty);
+      
       await Product.findByIdAndUpdate(item.product, {
         $inc: { stock: -item.qty }
       });
     }
 
+    const itemsPrice = calculatedItemsPrice;
+
     // Calculate shipping charge
     let shippingPrice = req.body.shippingPrice;
-    const itemsPrice = req.body.itemsPrice || 0;
     
     if (shippingPrice === undefined || shippingPrice === null) {
       if (itemsPrice < 500) {
@@ -31,13 +48,25 @@ export const createOrder = async (req, res) => {
       }
     }
 
-    const totalPrice = itemsPrice + shippingPrice + (req.body.taxPrice || 0);
+    // Calculate GST (18%) from backend
+    const taxPrice = Number((itemsPrice * 0.18).toFixed(2));
+
+    const totalPrice = itemsPrice + shippingPrice + taxPrice;
+    
+    // Extract payment method from request, default to COD
+    const paymentMethod = req.body.paymentMethod?.trim() || 'COD';
+    const isPaidInitially = paymentMethod === 'Razorpay' ? false : (paymentMethod === 'COD' ? false : false);
 
     const orderData = {
-      orderId: "#ORD" + Date.now(),
       ...req.body,
+      orderId: "#ORD" + Date.now(),
+      orderItems: secureOrderItems,
+      itemsPrice,
+      taxPrice,
       shippingPrice,
       totalPrice,
+      paymentMethod: paymentMethod,
+      isPaid: isPaidInitially,
       status: "Pending"
     };
 
@@ -46,6 +75,31 @@ export const createOrder = async (req, res) => {
     }
 
     const order = await Order.create(orderData);
+    
+    // Create transaction based on payment method
+    if (paymentMethod === 'COD' || paymentMethod === 'Cash on Delivery') {
+       await Transaction.create({
+         transactionId: 'TXNCOD' + Date.now(),
+         order: order._id,
+         user: order.user,
+         razorpayOrderId: 'COD_' + order.orderId,
+         amount: totalPrice,
+         currency: 'INR',
+         status: 'captured',
+         paymentMethod: 'COD',
+       });
+    } else if (paymentMethod === 'Razorpay') {
+       // Razorpay transaction will be created when payment is initiated
+       await Transaction.create({
+         transactionId: 'TXN_' + Date.now(),
+         order: order._id,
+         user: order.user,
+         amount: totalPrice,
+         currency: 'INR',
+         status: 'initiated',
+         paymentMethod: 'Razorpay',
+       });
+    }
 
     res.status(201).json({
       success: true,

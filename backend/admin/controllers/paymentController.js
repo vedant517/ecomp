@@ -133,16 +133,18 @@ export const verifyPayment = async (req, res) => {
 
     // Update linked order as paid if it exists
     if (transaction?.order) {
-      await Order.findByIdAndUpdate(transaction.order, {
+      const orderUpdate = await Order.findByIdAndUpdate(transaction.order, {
         isPaid: true,
         paidAt: Date.now(),
-        paymentMethod: 'Razorpay',
+        paymentMethod: 'Razorpay',  // ✅ IMPORTANT: Set to Razorpay
         paymentResult: {
           id: razorpay_payment_id,
           status: 'captured',
           update_time: new Date().toISOString(),
         },
-      });
+      }, { new: true });
+      
+      console.log(`✅ Order ${transaction.order} updated with Razorpay payment method:`, orderUpdate.paymentMethod);
     }
 
     res.json({

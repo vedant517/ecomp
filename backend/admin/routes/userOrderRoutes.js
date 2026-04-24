@@ -4,12 +4,13 @@ import {
   getUserOrders,
   cancelOrder
 } from "../controllers/userOrderController.js";
-
+import { protect } from "../../User/middleware/authMiddleware.js";
 
 const router = express.Router();
 
-router.post("/orders", createOrder);
-router.get("/orders", getUserOrders);
-router.put("/orders/:orderId", cancelOrder);
+router.post("/", protect, createOrder);
+router.get("/", protect, getUserOrders);
+router.put("/:orderId", protect, cancelOrder);
 
 export default router;
+

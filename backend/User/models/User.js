@@ -1,11 +1,9 @@
 import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema({
-  name: {
-    type: String,
-  },
   username: {
     type: String,
+    required: false,
   },
   email: {
     type: String,
@@ -14,23 +12,11 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
+    required: false,
+  },
+  phonenum: {
+    type: String,
     required: true,
-  },
-  mobile: {
-    type: String,
-  },
-  role: {
-    type: String,
-    enum: ['user', 'admin'],
-    default: 'user',
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-  lastActive: {
-    type: Date,
-    default: Date.now,
   },
 }, { timestamps: true });
 

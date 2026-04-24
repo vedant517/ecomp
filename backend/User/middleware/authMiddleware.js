@@ -30,7 +30,11 @@ export const protect = (req, res, next) => {
 
     next();
   } catch (err) {
-    console.error("Auth middleware error:", err.message);
+    console.error("Auth middleware error details:", {
+      message: err.message,
+      token: token ? (token.substring(0, 10) + "...") : "MISSING",
+      secret: process.env.JWT_SECRET ? "PRESENT" : "MISSING"
+    });
     return res.status(401).json({ message: "Not authorized, token failed" });
   }
 };

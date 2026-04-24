@@ -104,12 +104,72 @@ function StatusUpdateModal({ order, onClose, onUpdate }) {
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm border border-slate-100">
-        <h3 className="text-lg font-bold text-slate-900 mb-1">Update Status</h3>
+      <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-2xl border border-slate-100 max-h-[95vh] overflow-y-auto">
+        <h3 className="text-lg font-bold text-slate-900 mb-1">Order Details</h3>
         <p className="text-xs text-slate-500 mb-5">
-          Modifying Order:{' '}
+          Order ID:{' '}
           <span className="text-emerald-600 font-bold">#{order.orderId || order.id}</span>
         </p>
+
+        {/* Order Metadata */}
+        <div className="grid grid-cols-2 gap-3 mb-5 bg-slate-50 p-4 rounded-xl border border-slate-100">
+          <div>
+            <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">User ID</p>
+            <p className="text-sm text-slate-700 font-semibold">{order.userId || order.user || 'N/A'}</p>
+          </div>
+          <div>
+            <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Order Date</p>
+            <p className="text-sm text-slate-700 font-semibold">{order.date || new Date(order.createdAt).toLocaleDateString()}</p>
+          </div>
+          <div>
+            <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Payment Status</p>
+            <p className="text-sm font-semibold" style={{color: order.payment === 'Paid' ? '#10b981' : '#f97316'}}>{order.payment || 'Unpaid'}</p>
+          </div>
+          <div>
+            <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Payment Method</p>
+            <p className="text-sm text-slate-700 font-semibold">{order.paymentMethod || 'COD'}</p>
+          </div>
+        </div>
+
+        {/* Shipping Address */}
+        <div className="mb-5 bg-slate-50 p-4 rounded-xl border border-slate-100">
+          <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Shipping Address</h4>
+          <p className="text-sm text-slate-700"><strong>Name:</strong> {order.shippingAddress?.fullName || 'N/A'}</p>
+          <p className="text-sm text-slate-700"><strong>Address:</strong> {order.shippingAddress?.address || 'N/A'}</p>
+          <p className="text-sm text-slate-700"><strong>City:</strong> {order.shippingAddress?.city || 'N/A'}</p>
+          <p className="text-sm text-slate-700"><strong>Postal Code:</strong> {order.shippingAddress?.postalCode || 'N/A'}</p>
+          <p className="text-sm text-slate-700"><strong>Country:</strong> {order.shippingAddress?.country || 'N/A'}</p>
+        </div>
+
+        {/* Product Details */}
+        <div className="mb-5 bg-slate-50 p-4 rounded-xl border border-slate-100 overflow-y-auto max-h-48">
+          <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Purchased Items ({order.orderItems?.length || 0})</h4>
+          {order.orderItems?.map((item, index) => (
+             <div key={index} className="flex items-center gap-3 mb-3 border-b border-slate-200 pb-2 last:border-0 last:pb-0">
+                <img src={item.image || 'https://via.placeholder.com/40'} alt={item.name} className="w-12 h-12 object-cover rounded-md border border-slate-200" />
+                <div className="flex-1">
+                  <p className="text-sm font-bold text-slate-800">{item.name}</p>
+                  <p className="text-xs text-slate-500">Qty: {item.qty} × {formatINR(item.price)} = {formatINR(item.qty * item.price)}</p>
+                </div>
+             </div>
+          ))}
+        </div>
+
+        {/* Order Totals */}
+        <div className="mb-5 bg-blue-50 p-4 rounded-xl border border-blue-200">
+          <h4 className="text-xs font-black text-blue-600 uppercase tracking-widest mb-3">Price Breakdown</h4>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between"><span>Items Total:</span><strong>{formatINR(order.itemsPrice || 0)}</strong></div>
+            <div className="flex justify-between"><span>Shipping:</span><strong>{formatINR(order.shippingPrice || 0)}</strong></div>
+            <div className="flex justify-between"><span>Tax (GST):</span><strong>{formatINR(order.taxPrice || 0)}</strong></div>
+            <div className="border-t border-blue-200 pt-2 flex justify-between font-bold text-base">
+              <span>Total Amount:</span>
+              <span className="text-blue-600">{formatINR(order.totalPrice || order.price || 0)}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Status Update */}
         <div className="space-y-4">
           <div className="space-y-1.5">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
@@ -134,7 +194,7 @@ function StatusUpdateModal({ order, onClose, onUpdate }) {
               onClick={() => onUpdate(order.orderId || order.id, selectedStatus)}
               className="flex-1 px-4 py-2.5 text-xs font-bold bg-[#1a6b3c] text-white rounded-xl hover:bg-[#145a32] shadow-lg shadow-emerald-700/20 transition-all active:scale-95"
             >
-              Confirm Update
+              Update Status
             </button>
           </div>
         </div>
@@ -204,6 +264,8 @@ export default function OrderManagement() {
         price: order.totalPrice || order.price || 0,
         payment: order.isPaid ? 'Paid' : 'Unpaid',
         status: order.status || (order.isDelivered ? 'Delivered' : 'Pending'),
+        shippingAddress: order.shippingAddress || {},
+        orderItems: order.orderItems || [],
       };
     }) || [],
     [ordersResponse]);

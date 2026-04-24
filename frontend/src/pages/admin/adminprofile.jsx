@@ -241,7 +241,7 @@ const AdminProfile = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/admin/profile", {
+        const res = await fetch("/api/admin/profile", {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
@@ -292,7 +292,7 @@ const AdminProfile = () => {
   const handleUpdate = async () => {
     setSaving(true);
     try {
-      const res = await fetch("http://localhost:5000/api/admin/profile", {
+      const res = await fetch("/api/admin/profile", {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -331,7 +331,7 @@ const AdminProfile = () => {
     setPwSaving(true);
     try {
       const res = await fetch(
-        "http://localhost:5000/api/admin/profile/password",
+        "/api/admin/profile/password",
         {
           method: "PUT",
           headers: {
@@ -365,7 +365,7 @@ const AdminProfile = () => {
     formData.append("profileImage", file);
     try {
       const res = await fetch(
-        "http://localhost:5000/api/admin/profile/image",
+        "/api/admin/profile/image",
         {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
@@ -388,7 +388,7 @@ const AdminProfile = () => {
   const handleDeleteImage = async () => {
     try {
       const res = await fetch(
-        "http://localhost:5000/api/admin/profile/image",
+        "/api/admin/profile/image",
         {
           method: "DELETE",
           headers: { Authorization: `Bearer ${token}` },

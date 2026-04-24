@@ -4,10 +4,7 @@ import Wishlist from "../models/Wishlist.js";
 
 const router = express.Router();
 
-
-// ==============================
-// 🔐 GET USER ID FROM TOKEN
-// ==============================
+//  GET USER ID FROM TOKEN
 const getUserId = (req) => {
   const authHeader = req.headers.authorization;
   let token = null;
@@ -22,7 +19,7 @@ const getUserId = (req) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    return decoded.id;
+    return decoded.id;  
   } catch (err) {
     console.log("JWT ERROR:", err.message);
     return null;

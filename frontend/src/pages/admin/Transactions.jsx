@@ -242,7 +242,15 @@ export default function Transactions() {
                           <td style={{ padding: '14px', fontSize: '11px', fontWeight: 700, color: '#64748b', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>{t.razorpayOrderId?.slice(0, 20)}...</td>
                           <td style={{ padding: '14px', textAlign: 'center', fontSize: '13px', fontWeight: 900, color: '#0f172a', whiteSpace: 'nowrap' }}>{formatINR(t.amount)}</td>
                           <td style={{ padding: '14px', textAlign: 'center' }}>
-                            <span style={{ fontSize: '10px', fontWeight: 700, color: '#64748b', background: '#f1f5f9', padding: '4px 10px', borderRadius: '999px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{t.paymentMethod || 'Razorpay'}</span>
+                            {(() => {
+                              const method = t.paymentMethod || t.order?.paymentMethod || 'Razorpay';
+                              const isCod = method.toLowerCase() === 'cod' || method.toLowerCase() === 'cash on delivery';
+                              return (
+                                <span style={{ fontSize: '10px', fontWeight: 700, color: isCod ? '#b45309' : '#1e40af', background: isCod ? '#fef3c7' : '#dbeafe', padding: '4px 10px', borderRadius: '999px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                                  {isCod ? 'COD' : 'Razorpay'}
+                                </span>
+                              );
+                            })()}
                           </td>
                           <td style={{ padding: '14px', textAlign: 'center', fontSize: '11px', fontWeight: 600, color: '#64748b', whiteSpace: 'nowrap' }}>
                             {new Date(t.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}

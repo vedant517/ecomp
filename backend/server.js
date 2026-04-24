@@ -6,10 +6,6 @@ import morgan from "morgan";
 import helmet from "helmet";
 import compression from "compression";
 import cookieParser from "cookie-parser";
-import dns from "dns";
-
-// Force DNS (fix Mongo SRV error)
-dns.setServers(["8.8.8.8", "8.8.4.4"]);
 
 // Load env
 dotenv.config();
@@ -50,7 +46,6 @@ import brandRoutes from "./admin/routes/brandRoutes.js";
 import subcategoryRoutes from "./admin/routes/subcategoryRoutes.js";
 import adminRoutes from "./admin/routes/adminRoutes.js";
 import orderRoutes from "./admin/routes/orderRoutes.js";
-import userRoutes from "./admin/routes/userOrderRoutes.js";
 import paymentRoutes from "./admin/routes/paymentRoutes.js";
 import transactionRoutes from "./admin/routes/transactionRoutes.js";
 import customerRoutes from "./admin/routes/customer.routes.js";
@@ -58,43 +53,56 @@ import addressRoutes from "./admin/routes/address.routes.js";
 import offerRoutes from "./admin/routes/offerRoutes.js";
 import adminProfileRoutes from "./admin/routes/adminProfile.routes.js";
 import shippingRoutes from "./admin/routes/shippingRoutes.js";
+import couponRoutes from "./admin/routes/Couponroutes.js";
+
+
 
 // ==============================
-// ✅ USER ROUTES (Converted)
+// ✅ USER ROUTES (Migrated from 'server' folder)
 // ==============================
 import authRoutes from "./User/routes/authRoutes.js";
 import cartRoutes from "./User/routes/cartRoutes.js";
 import wishlistRoutes from "./User/routes/wishlistRoutes.js";
-import userOrderRoutes from "./User/routes/orderRoutes.js";
+import userOrderRoutes from "./User/routes/orderRoutes.js"; // New order routes from 'server'
+import userProductRoutes from "./User/routes/productRoutes.js";
+import userCategoryRoutes from "./User/routes/categoryRoutes.js";
+import userAddressRoutes from "./User/routes/addressRoutes.js";
+import userCouponRoutes from "./User/routes/couponRoutes.js";
+import userOfferRoutes from "./User/routes/offerRoutes.js";
+import userPaymentRoutes from "./User/routes/paymentRoutes.js";
+import userShippingRoutes from "./User/routes/shippingRoutes.js";
+import userRoutes from "./User/routes/userRoutes.js";
 import reviewRoutes from "./User/routes/reviewRoutes.js";
 
 // ==============================
-// ✅ ROUTE MAPPING
+// ✅ ROUTE MAPPING (Unified)
 // ==============================
 
-// Admin APIs
-app.use("/api/products", productRoutes);
-app.use("/api/config", configRoutes);
-app.use("/api/categories", categoryRoutes);
-app.use("/api/brands", brandRoutes);
-app.use("/api/subcategories", subcategoryRoutes);
-app.use("/api/admin", adminRoutes);
-app.use("/api/orders", orderRoutes);
-app.use("/api/user", userRoutes);
-app.use("/api/payments", paymentRoutes);
-app.use("/api/transactions", transactionRoutes);
-app.use("/api/customers", customerRoutes);
-app.use("/api/addresses", addressRoutes);
-app.use("/api/offers", offerRoutes);
-app.use("/api/admin/profile", adminProfileRoutes);
-app.use("/api/shipping", shippingRoutes);
+// Main Unified Routes (User + Admin)
+app.use("/api/products", userProductRoutes);
+app.use("/api/categories", userCategoryRoutes);
+app.use("/api/orders", userOrderRoutes);
+app.use("/api/addresses", userAddressRoutes);
+app.use("/api/coupons", userCouponRoutes);
+app.use("/api/offers", userOfferRoutes);
+app.use("/api/payments", userPaymentRoutes);
+app.use("/api/shipping", userShippingRoutes);
 
-// User APIs
+// User-Specific Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/wishlist", wishlistRoutes);
-app.use("/api/user/orders", userOrderRoutes);
+app.use("/api/user", userRoutes);
 app.use("/api/reviews", reviewRoutes);
+
+// Admin-Specific Routes
+app.use("/api/config", configRoutes);
+app.use("/api/brands", brandRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/transactions", transactionRoutes);
+app.use("/api/customers", customerRoutes);
+app.use("/api/admin/profile", adminProfileRoutes);
+app.use("/api/subcategories", subcategoryRoutes);
 
 // ==============================
 // ✅ HEALTH CHECK
@@ -116,6 +124,9 @@ app.use((req, res) => {
 
 app.use((err, req, res, next) => {
   console.error(`[Error] ${req.method} ${req.url}: ${err.message}`);
+  if (process.env.NODE_ENV !== "production") {
+    console.error(err.stack);
+  }
 
   res.status(err.status || 500).json({
     success: false,
@@ -123,20 +134,35 @@ app.use((err, req, res, next) => {
       process.env.NODE_ENV === "production"
         ? "Internal Server Error"
         : err.message,
+    stack: process.env.NODE_ENV === "production" ? null : err.stack,
   });
 });
+
 
 // ==============================
 // ✅ DATABASE CONNECTION
 // ==============================
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI, {
-      serverSelectionTimeoutMS: 5000,
+    await mongoose.connect(process.env.MONGODB_URI, {
+      serverSelectionTimeoutMS: 30000,
+      socketTimeoutMS: 45000,
+      connectTimeoutMS: 30000,
       family: 4,
     });
 
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
+    console.log(`MongoDB Connected: ${mongoose.connection.host}`);
+
+    mongoose.connection.on("disconnected", () => {
+      console.warn("MongoDB disconnected. Attempting to reconnect...");
+    });
+    mongoose.connection.on("reconnected", () => {
+      console.log("MongoDB reconnected.");
+    });
+    mongoose.connection.on("error", (err) => {
+      console.error("MongoDB connection error:", err.message);
+    });
+
     return true;
   } catch (error) {
     console.error(`MongoDB Error: ${error.message}`);
@@ -144,11 +170,10 @@ const connectDB = async () => {
   }
 };
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
-// ==============================
-// ✅ START SERVER
-// ==============================
+
+
 connectDB().then((isConnected) => {
   if (isConnected) {
     app.listen(PORT, () => {
@@ -159,9 +184,7 @@ connectDB().then((isConnected) => {
   }
 });
 
-// ==============================
-// ✅ GRACEFUL SHUTDOWN
-// ==============================
+
 process.on("SIGTERM", () => {
   mongoose.connection.close(false, () => {
     console.log("MongoDB connection closed");

@@ -27,10 +27,10 @@ const OfferPage = () => {
     const fetchData = async () => {
       try {
         const [offerRes, productRes, categoryRes, subcategoryRes] = await Promise.all([
-          fetch("http://localhost:5000/api/offers"),
-          fetch("http://localhost:5000/api/products"),
-          fetch("http://localhost:5000/api/categories"),
-          fetch("http://localhost:5000/api/subcategories"),
+          fetch("/api/offers"),
+          fetch("/api/products?limit=1000"),
+          fetch("/api/categories"),
+          fetch("/api/subcategories"),
 
         ]);
         const [offerData, productData, categoryData, subcategoryData] = await Promise.all([
@@ -75,7 +75,7 @@ const OfferPage = () => {
     try {
       const payload = { ...formData };
       if (!payload.variantId) delete payload.variantId;
-      const res = await fetch("http://localhost:5000/api/offers", {
+      const res = await fetch("/api/offers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

@@ -1,21 +1,37 @@
-import api from './api';
+import axios from 'axios';
 
-export const orderService = {
-  // Get all orders with filters
-  getOrders: async (params) => {
-    const response = await api.get('/orders', { params });
-    return response.data;
+// Axios instance — uses Vite dev proxy (/api → http://127.0.0.1:5000)
+const api = axios.create({
+  baseURL: '/api',
+  timeout: 30000,
+  headers: {
+    'Content-Type': 'application/json',
   },
+});
 
-  // Update order status
-  updateOrderStatus: async (orderId, orderData) => {
-    const response = await api.put(`/orders/${orderId}`, orderData);
-    return response.data;
+// Attach JWT from localStorage on every request
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
   },
+  (error) => Promise.reject(error)
+);
 
-  // Get order statistics for dashboard
-  getOrderStats: async () => {
-    const response = await api.get('/orders/stats');
-    return response.data;
-  },
-};
+// Global response error handler
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('role');
+      window.location.href = '/';
+    }
+    return Promise.reject(error);
+  }
+);
+
+export default api;

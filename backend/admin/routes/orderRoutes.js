@@ -11,12 +11,13 @@ const router = express.Router();
 
 // Order creation and list
 router.route("/")
-  .get(getOrders)
+  .get(protect, authorize('admin'), getOrders)
   .post(protect, createOrder);
 
-router.get("/stats", getOrderStats);
+router.get("/stats", protect, authorize('admin'), getOrderStats);
 
 // Admin-only write routes
 router.put("/:orderId", protect, authorize('admin'), updateOrder);
+
 
 export default router;

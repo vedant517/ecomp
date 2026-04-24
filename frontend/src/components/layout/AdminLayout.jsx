@@ -131,6 +131,7 @@ export default function AdminLayout({ setIsAuthenticated }) {
           <button
             onClick={() => {
               localStorage.removeItem('token');
+              localStorage.removeItem('role');
               if (setIsAuthenticated) setIsAuthenticated(false);
               else window.location.href = '/';
             }}

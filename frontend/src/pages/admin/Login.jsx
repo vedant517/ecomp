@@ -5,8 +5,9 @@ import { Lock, Mail, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { setCredentials } from '../../features/auth/authSlice';
 
 export default function Login({ setIsAuthenticated }) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('admin@gmail.com');
+  const [password, setPassword] = useState('admin123');
+
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -105,7 +106,8 @@ export default function Login({ setIsAuthenticated }) {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@example.com"
+                placeholder="admin@gmail.com"
+
                 style={{
                   width: '100%',
                   padding: '12px 12px 12px 40px',

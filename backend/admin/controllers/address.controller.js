@@ -52,7 +52,6 @@ export const getAddresses = async (req, res) => {
 };
 
 
-
 //  GET BY USER
 export const getAddressesByUser = async (req, res) => {
   try {

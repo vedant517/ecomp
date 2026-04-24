@@ -4,7 +4,7 @@ import {
   verifyPayment,
   getRazorpayKey,
 } from '../controllers/paymentController.js';
-// Authorization middleware is intentionally removed for public payment flow
+import { protect } from "../../User/middleware/authMiddleware.js";
 
 const router = express.Router();
 
@@ -12,7 +12,8 @@ const router = express.Router();
 router.get('/key', getRazorpayKey);
 
 // Protected - create order & verify payment
-router.post('/create-order', createRazorpayOrder);
-router.post('/verify', verifyPayment);
+router.post('/create-order', protect, createRazorpayOrder);
+router.post('/verify', protect, verifyPayment);
 
 export default router;
+

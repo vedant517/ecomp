@@ -1,23 +1,21 @@
-import axios from 'axios';
+import api from './api';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
-
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
+export const orderService = {
+  // Get all orders with optional status filter
+  getOrders: async (params) => {
+    const response = await api.get('/orders', { params });
+    return response.data;
   },
-});
 
-// Add token to requests if it exists
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('adminToken');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+  // Update order status
+  updateOrderStatus: async (orderId, orderData) => {
+    const response = await api.put(`/orders/${orderId}`, orderData);
+    return response.data;
+  },
 
-// Response interceptor for error handling
-
-export default api; 
+  // Get order statistics for dashboard
+  getOrderStats: async () => {
+    const response = await api.get('/orders/stats');
+    return response.data;
+  },
+};

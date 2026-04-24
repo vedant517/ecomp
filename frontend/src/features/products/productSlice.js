@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api/products';
+const API_URL = '/api/products';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 const getAuthHeader = (thunkAPI) => ({
@@ -133,10 +133,10 @@ const productSlice = createSlice({
       .addCase(fetchProducts.pending, (state) => { state.loading = true; state.error = null; })
       .addCase(fetchProducts.fulfilled, (state, action) => {
         state.loading = false;
-        state.items = action.payload.data;
-        state.total = action.payload.total;
-        state.page = action.payload.page;
-        state.pages = action.payload.pages;
+        state.items = Array.isArray(action.payload.data) ? action.payload.data : [];
+        state.total = action.payload.total || 0;
+        state.page = action.payload.page || 1;
+        state.pages = action.payload.pages || 1;
       })
       .addCase(fetchProducts.rejected, (state, action) => {
         state.loading = false;

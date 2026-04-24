@@ -5,9 +5,30 @@ export const getProducts = async (req, res) => {
     const { category, subcategory, search, sort, page = 1, limit = 20 } = req.query;
 
     let query = {};
+    const mongoose = (await import('mongoose')).default;
 
-    if (category) query.category = category;
-    if (subcategory) query.subcategory = subcategory;
+    if (category) {
+      if (mongoose.Types.ObjectId.isValid(category)) {
+        query.category = category;
+      } else {
+        const Category = mongoose.model('Category');
+        const cat = await Category.findOne({ name: category });
+        if (cat) query.category = cat._id;
+        else query.category = new mongoose.Types.ObjectId(); // No match, force empty result
+      }
+    }
+
+    if (subcategory) {
+      if (mongoose.Types.ObjectId.isValid(subcategory)) {
+        query.subcategory = subcategory;
+      } else {
+        const Subcategory = mongoose.model('Subcategory');
+        const sub = await Subcategory.findOne({ name: subcategory });
+        if (sub) query.subcategory = sub._id;
+        else query.subcategory = new mongoose.Types.ObjectId(); // No match, force empty result
+      }
+    }
+
     if (search) query.name = { $regex: search, $options: 'i' };
 
     const skip = (Number(page) - 1) * Number(limit);
@@ -35,8 +56,10 @@ export const getProducts = async (req, res) => {
       data: products,
     });
   } catch (error) {
+    console.error('Get Products Error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
+
 };
 
 export const createProduct = async (req, res) => {
