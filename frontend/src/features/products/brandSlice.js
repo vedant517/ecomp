@@ -1,7 +1,8 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
+import { API_BASE_URL } from '../../services/apiConfig';
 
-const API_URL = '/api/brands';
+const API_URL = `${API_BASE_URL}/brands`;
 
 const getAuthHeader = (thunkAPI) => ({
   Authorization: `Bearer ${thunkAPI.getState().auth?.token}`,

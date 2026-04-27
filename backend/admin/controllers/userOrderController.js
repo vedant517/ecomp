@@ -94,9 +94,10 @@ export const createOrder = async (req, res) => {
          transactionId: 'TXN_' + Date.now(),
          order: order._id,
          user: order.user,
+         razorpayOrderId: 'PENDING_' + order.orderId, // Required by model
          amount: totalPrice,
          currency: 'INR',
-         status: 'initiated',
+         status: 'created', // 'initiated' is not in enum
          paymentMethod: 'Razorpay',
        });
     }

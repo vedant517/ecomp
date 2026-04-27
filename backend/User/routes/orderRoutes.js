@@ -10,6 +10,7 @@ import Order from "../models/Order.js";
 import Cart from "../models/Cart.js";
 import Coupon from "../models/Coupon.js";
 import Product from "../models/Product.js";
+import Transaction from "../../admin/models/Transaction.js";
 
 const router = express.Router();
 
@@ -125,6 +126,22 @@ router.post("/", userProtect, async (req, res) => {
       await Cart.deleteMany({ userId: req.user._id });
     } catch (err) {
       console.warn("Could not clear cart:", err.message);
+    }
+
+    // Create transaction record for COD
+    if (paymentMethod === "cod" || paymentMethod === "Cash on Delivery") {
+      try {
+        await Transaction.create({
+          user: req.user._id,
+          order: order._id,
+          razorpayOrderId: `COD-${order.orderId}`,
+          amount: finalTotalPrice,
+          status: 'captured',
+          paymentMethod: 'COD'
+        });
+      } catch (txnErr) {
+        console.error("Failed to create COD transaction:", txnErr);
+      }
     }
 
     res.status(201).json({

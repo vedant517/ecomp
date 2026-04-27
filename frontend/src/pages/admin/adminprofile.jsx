@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { toast, Toaster } from "react-hot-toast";
 import { useSelector } from "react-redux";
+import { API_BASE_URL } from "../../services/apiConfig";
 
 
 const S = {
@@ -241,7 +242,7 @@ const AdminProfile = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await fetch("/api/admin/profile", {
+        const res = await fetch(`${API_BASE_URL}/admin/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
@@ -292,7 +293,7 @@ const AdminProfile = () => {
   const handleUpdate = async () => {
     setSaving(true);
     try {
-      const res = await fetch("/api/admin/profile", {
+      const res = await fetch(`${API_BASE_URL}/admin/profile`, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -331,7 +332,7 @@ const AdminProfile = () => {
     setPwSaving(true);
     try {
       const res = await fetch(
-        "/api/admin/profile/password",
+        `${API_BASE_URL}/admin/profile/password`,
         {
           method: "PUT",
           headers: {
@@ -365,7 +366,7 @@ const AdminProfile = () => {
     formData.append("profileImage", file);
     try {
       const res = await fetch(
-        "/api/admin/profile/image",
+        `${API_BASE_URL}/admin/profile/image`,
         {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
@@ -388,7 +389,7 @@ const AdminProfile = () => {
   const handleDeleteImage = async () => {
     try {
       const res = await fetch(
-        "/api/admin/profile/image",
+        `${API_BASE_URL}/admin/profile/image`,
         {
           method: "DELETE",
           headers: { Authorization: `Bearer ${token}` },

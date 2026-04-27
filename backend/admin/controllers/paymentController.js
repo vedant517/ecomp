@@ -121,30 +121,54 @@ export const verifyPayment = async (req, res) => {
     }
 
     // Update transaction as captured
-    const transaction = await Transaction.findOneAndUpdate(
-      { razorpayOrderId: razorpay_order_id },
-      {
+    let transaction = await Transaction.findOne({ razorpayOrderId: razorpay_order_id });
+
+    if (transaction) {
+      transaction.razorpayPaymentId = razorpay_payment_id;
+      transaction.razorpaySignature = razorpay_signature;
+      transaction.status = 'captured';
+      await transaction.save();
+      console.log(`[ADMIN-PAYMENT] Transaction ${transaction._id} updated to captured.`);
+    } else {
+      console.warn(`[ADMIN-PAYMENT-WARNING] Transaction not found for ${razorpay_order_id}. Creating fallback.`);
+      transaction = await Transaction.create({
+        user: req.user?._id,
+        razorpayOrderId: razorpay_order_id,
         razorpayPaymentId: razorpay_payment_id,
         razorpaySignature: razorpay_signature,
+        amount: req.body.amount || 0,
         status: 'captured',
-      },
-      { new: true }
-    );
+      });
+    }
 
     // Update linked order as paid if it exists
-    if (transaction?.order) {
-      const orderUpdate = await Order.findByIdAndUpdate(transaction.order, {
-        isPaid: true,
-        paidAt: Date.now(),
-        paymentMethod: 'Razorpay',  // ✅ IMPORTANT: Set to Razorpay
-        paymentResult: {
+    const orderToUpdate = transaction.order || req.body.orderId;
+    if (orderToUpdate) {
+      let dbOrder = null;
+      if (mongoose.Types.ObjectId.isValid(orderToUpdate)) {
+        dbOrder = await Order.findById(orderToUpdate);
+      } else {
+        dbOrder = await Order.findOne({ orderId: orderToUpdate });
+      }
+
+      if (dbOrder) {
+        dbOrder.isPaid = true;
+        dbOrder.paidAt = Date.now();
+        dbOrder.paymentMethod = 'Razorpay';
+        dbOrder.paymentResult = {
           id: razorpay_payment_id,
           status: 'captured',
           update_time: new Date().toISOString(),
-        },
-      }, { new: true });
-      
-      console.log(`✅ Order ${transaction.order} updated with Razorpay payment method:`, orderUpdate.paymentMethod);
+        };
+        await dbOrder.save();
+        console.log(`✅ Order ${dbOrder.orderId} updated successfully.`);
+        
+        // Ensure transaction is linked to the order if it wasn't
+        if (!transaction.order) {
+          transaction.order = dbOrder._id;
+          await transaction.save();
+        }
+      }
     }
 
     res.json({

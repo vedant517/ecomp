@@ -1,6 +1,5 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-
-const API_BASE_URL = '/api';
+import { API_BASE_URL } from '../../services/apiConfig';
 
 export const orderApi = createApi({
   reducerPath: 'orderApi',
@@ -19,7 +18,7 @@ export const orderApi = createApi({
   tagTypes: ['Order', 'OrderStats'],
   endpoints: (builder) => ({
     getOrders: builder.query({
-      query: (status) => (status ? `/orders?status=${status}` : '/orders'),
+      query: (status) => (status ? `/admin/orders?status=${status}` : '/admin/orders'),
       providesTags: (result) =>
         result?.data
           ? [
@@ -29,12 +28,12 @@ export const orderApi = createApi({
           : [{ type: 'Order', id: 'LIST' }],
     }),
     getOrderStats: builder.query({
-      query: () => '/orders/stats',
+      query: () => '/admin/orders/stats',
       providesTags: ['OrderStats'],
     }),
     updateOrderStatus: builder.mutation({
       query: ({ orderId, status }) => ({
-        url: `/orders/${orderId}`,
+        url: `/admin/orders/${orderId}`,
         method: 'PUT',
         body: { status },
       }),

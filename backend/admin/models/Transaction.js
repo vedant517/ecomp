@@ -34,7 +34,7 @@ const transactionSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['created', 'authorized', 'captured', 'refunded', 'failed'],
+    enum: ['created', 'authorized', 'captured', 'refunded', 'failed', 'initiated', 'cod'],
     default: 'created',
   },
   paymentMethod: {

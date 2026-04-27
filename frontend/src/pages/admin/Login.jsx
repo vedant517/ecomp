@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { Lock, Mail, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { setCredentials } from '../../features/auth/authSlice';
+import { API_BASE_URL } from '../../services/apiConfig';
 
 export default function Login({ setIsAuthenticated }) {
   const [email, setEmail] = useState('admin@gmail.com');
@@ -20,7 +21,7 @@ export default function Login({ setIsAuthenticated }) {
     setError('');
 
     try {
-      const response = await fetch('/api/admin/login', {
+      const response = await fetch(`${API_BASE_URL}/admin/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email.trim(), password }),

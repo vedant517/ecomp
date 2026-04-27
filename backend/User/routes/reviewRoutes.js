@@ -24,6 +24,26 @@ router.post("/", async (req, res) => {
       comment,
     });
 
+    // ✅ Also update the Product's reviews array for backward compatibility
+    const Product = (await import("../models/Product.js")).default;
+    const User = (await import("../../models/User.js")).default;
+    const productDoc = await Product.findById(product);
+    if (productDoc) {
+      const dbUser = await User.findById(user);
+      const productReview = {
+        user,
+        name: dbUser?.name || "Anonymous",
+        rating: Number(rating),
+        comment,
+      };
+      productDoc.reviews.push(productReview);
+      productDoc.numReviews = productDoc.reviews.length;
+      productDoc.rating =
+        productDoc.reviews.reduce((acc, item) => item.rating + acc, 0) /
+        productDoc.reviews.length;
+      await productDoc.save();
+    }
+
     res.status(201).json({
       success: true,
       data: review,
@@ -36,6 +56,29 @@ router.post("/", async (req, res) => {
       });
     }
 
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+
+/* ==============================
+   GET ALL REVIEWS (Admin Use)
+============================== */
+router.get("/", async (req, res) => {
+  try {
+    const reviews = await Review.find()
+      .populate("product", "name image price category brand rating numReviews createdAt")
+      .populate("user", "name username email")
+      .sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      count: reviews.length,
+      data: reviews,
+    });
+  } catch (error) {
     res.status(500).json({
       success: false,
       message: error.message,

@@ -1,10 +1,10 @@
-// features/coupons/couponApi.js
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { API_BASE_URL } from '../../services/apiConfig';
 
 export const couponApi = createApi({
   reducerPath: 'couponApi',
   baseQuery: fetchBaseQuery({
-    baseUrl: '/api/coupons',
+    baseUrl: `${API_BASE_URL}/coupons`,
     prepareHeaders: (headers, { getState }) => {
       const token = getState().auth?.token || localStorage.getItem('token');
       if (token) headers.set('Authorization', `Bearer ${token}`);

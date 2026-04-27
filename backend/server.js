@@ -7,8 +7,17 @@ import helmet from "helmet";
 import compression from "compression";
 import cookieParser from "cookie-parser";
 
+import dns from "node:dns";
+
 // Load env
 dotenv.config();
+
+// Fix for MongoDB SRV DNS resolution issues
+try {
+  dns.setServers(["8.8.8.8", "8.8.4.4"]);
+} catch (err) {
+  console.warn("⚠️ DNS setServers failed, proceeding with system default:", err.message);
+}
 
 const app = express();
 
@@ -73,6 +82,8 @@ import userPaymentRoutes from "./User/routes/paymentRoutes.js";
 import userShippingRoutes from "./User/routes/shippingRoutes.js";
 import userRoutes from "./User/routes/userRoutes.js";
 import reviewRoutes from "./User/routes/reviewRoutes.js";
+import buyNowRoutes from "./User/routes/buyNowRoutes.js";
+
 
 // ==============================
 // ✅ ROUTE MAPPING (Unified)
@@ -94,11 +105,14 @@ app.use("/api/cart", cartRoutes);
 app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/reviews", reviewRoutes);
+app.use("/api/buynow", buyNowRoutes);
+
 
 // Admin-Specific Routes
 app.use("/api/config", configRoutes);
 app.use("/api/brands", brandRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/admin/orders", orderRoutes);  // ✅ ADMIN ORDER MANAGEMENT
 app.use("/api/transactions", transactionRoutes);
 app.use("/api/customers", customerRoutes);
 app.use("/api/admin/profile", adminProfileRoutes);
@@ -144,28 +158,41 @@ app.use((err, req, res, next) => {
 // ==============================
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI, {
+    const uri = process.env.MONGODB_URI;
+    if (!uri) {
+      console.error("CRITICAL: MONGODB_URI is not defined in environment variables!");
+      return false;
+    }
+
+    // Mask password in logs
+    const maskedUri = uri.replace(/\/\/.*:.*@/, "//<user>:<password>@");
+    console.log(`Attempting to connect to MongoDB: ${maskedUri}`);
+
+    await mongoose.connect(uri, {
       serverSelectionTimeoutMS: 30000,
       socketTimeoutMS: 45000,
       connectTimeoutMS: 30000,
       family: 4,
     });
 
-    console.log(`MongoDB Connected: ${mongoose.connection.host}`);
+    console.log(`✅ MongoDB Connected Successfully! Host: ${mongoose.connection.host}`);
 
     mongoose.connection.on("disconnected", () => {
-      console.warn("MongoDB disconnected. Attempting to reconnect...");
+      console.warn("⚠️ MongoDB disconnected. Attempting to reconnect...");
     });
     mongoose.connection.on("reconnected", () => {
-      console.log("MongoDB reconnected.");
+      console.log("✅ MongoDB reconnected.");
     });
     mongoose.connection.on("error", (err) => {
-      console.error("MongoDB connection error:", err.message);
+      console.error("❌ MongoDB connection error:", err.message);
     });
 
     return true;
   } catch (error) {
-    console.error(`MongoDB Error: ${error.message}`);
+    console.error(`❌ MongoDB Connection Error: ${error.message}`);
+    if (error.message.includes("ETIMEOUT")) {
+      console.error("TIP: Check if your IP is whitelisted in MongoDB Atlas (add 0.0.0.0/0 for Render).");
+    }
     return false;
   }
 };

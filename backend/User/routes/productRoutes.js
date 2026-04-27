@@ -1,7 +1,7 @@
 import express from "express";
 import Product from "../models/Product.js";
 import Offer from "../models/Offer.js";
-import User from "../models/User.js";
+import User from "../../models/User.js";
 import { protect as userProtect } from "../middleware/authMiddleware.js";
 import { 
   createProduct, 
@@ -234,6 +234,15 @@ router.post("/:id/reviews", userProtect, async (req, res) => {
     product.rating =
       product.reviews.reduce((acc, item) => item.rating + acc, 0) /
       product.reviews.length;
+
+    // ✅ Also save to standalone Review collection for Admin Panel
+    const Review = (await import("../models/Review.js")).default;
+    await Review.create({
+      user: req.user._id,
+      product: product._id,
+      rating: Number(rating),
+      comment,
+    });
 
     await product.save();
     res.status(201).json({ success: true, message: "Review added" });

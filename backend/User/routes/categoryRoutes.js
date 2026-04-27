@@ -206,6 +206,30 @@ router.get("/:id/subcategories", async (req, res) => {
 });
 
 // ==============================
+// ✅ GET ALL SUBCATEGORIES (Public endpoint)
+// ==============================
+router.get("/subcategories", async (req, res) => {
+  try {
+    const allSubcats = await mongoose.connection.db
+      .collection("subcategories")
+      .find({})
+      .toArray();
+
+    res.status(200).json({
+      success: true,
+      count: allSubcats.length,
+      data: allSubcats
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+      data: []
+    });
+  }
+});
+
+// ==============================
 // ✅ ADMIN ROUTES (Management)
 // ==============================
 

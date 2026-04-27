@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Star, ArrowLeft, MessageSquare, User, Clock, AlertCircle } from 'lucide-react';
+import { API_BASE_URL } from '../../services/apiConfig';
 
 const ProductReviewPage = () => {
   const { id } = useParams();
@@ -23,7 +24,7 @@ const ProductReviewPage = () => {
   const fetchProduct = async () => {
     try {
       setLoading(true);
-      const { data } = await axios.get(`/api/products/${id}`);
+      const { data } = await axios.get(`${API_BASE_URL}/products/${id}`);
       setProduct(data.data);
       setLoading(false);
     } catch (err) {
@@ -46,7 +47,7 @@ const ProductReviewPage = () => {
       };
 
       await axios.post(
-        `/api/products/${id}/reviews`,
+        `${API_BASE_URL}/products/${id}/reviews`,
         { rating, comment },
         config
       );

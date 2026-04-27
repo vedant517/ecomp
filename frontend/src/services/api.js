@@ -1,8 +1,9 @@
 import axios from 'axios';
+import { API_BASE_URL } from './apiConfig';
 
-// Axios instance — uses Vite dev proxy (/api → http://127.0.0.1:5000)
+// Axios instance
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: API_BASE_URL,
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',

@@ -3,6 +3,8 @@ import Razorpay from "razorpay";
 import { protect } from "../middleware/authMiddleware.js";
 import Order from "../models/Order.js";
 import crypto from "crypto";
+import Transaction from "../../admin/models/Transaction.js";
+import mongoose from "mongoose";
 
 const router = express.Router();
 
@@ -36,6 +38,41 @@ router.post("/create-order", protect, async (req, res) => {
       return res.status(500).json({ success: false, message: "Failed to create Razorpay order" });
     }
 
+    // Create a transaction record so Admin panel can show it
+    try {
+      let dbOrderId = undefined;
+      if (orderId) {
+        if (mongoose.Types.ObjectId.isValid(orderId)) {
+          dbOrderId = orderId;
+        } else {
+          const dbOrder = await Order.findOne({ orderId: orderId });
+          if (dbOrder) dbOrderId = dbOrder._id;
+        }
+      }
+
+      await Transaction.create({
+        user: req.user._id,
+        order: dbOrderId,
+        razorpayOrderId: order.id,
+        amount: amount,
+        currency,
+        status: "created",
+        receipt: options.receipt,
+      });
+    } catch (txnError) {
+      console.error("CRITICAL: Failed to create transaction record in /create-order:");
+      console.error("Error details:", txnError);
+      console.error("Transaction data attempted:", {
+        user: req.user._id,
+        order: dbOrderId,
+        razorpayOrderId: order.id,
+        amount: amount,
+        currency,
+        status: "created",
+        receipt: options.receipt,
+      });
+    }
+
     res.json(order);
   } catch (error) {
     console.error("Razorpay order creation error:", error);
@@ -58,7 +95,13 @@ router.post("/verify", protect, async (req, res) => {
     if (generated_signature === razorpay_signature) {
       // Payment verified
       if (orderId) {
-        await Order.findByIdAndUpdate(orderId, {
+        let dbOrderId = orderId;
+        if (!mongoose.Types.ObjectId.isValid(orderId)) {
+          const dbOrder = await Order.findOne({ orderId: orderId });
+          if (dbOrder) dbOrderId = dbOrder._id;
+        }
+        
+        await Order.findByIdAndUpdate(dbOrderId, {
           paymentStatus: "completed",
           paymentResult: {
             id: razorpay_payment_id,
@@ -71,6 +114,43 @@ router.post("/verify", protect, async (req, res) => {
           razorpaySignature: razorpay_signature,
         });
       }
+
+      // Update Transaction to captured
+      try {
+        let transaction = await Transaction.findOne({ razorpayOrderId: razorpay_order_id });
+        
+        if (transaction) {
+          transaction.razorpayPaymentId = razorpay_payment_id;
+          transaction.razorpaySignature = razorpay_signature;
+          transaction.status = "captured";
+          await transaction.save();
+          console.log(`[PAYMENT-SUCCESS] Transaction ${transaction._id} updated to captured.`);
+        } else {
+          // Fallback: Create transaction if it wasn't created during /create-order
+          console.log(`[PAYMENT-WARNING] Transaction not found for Order ${razorpay_order_id}. Creating fallback record.`);
+          
+          let dbOrderId = orderId;
+          if (orderId && !mongoose.Types.ObjectId.isValid(orderId)) {
+            const dbOrder = await Order.findOne({ orderId: orderId });
+            if (dbOrder) dbOrderId = dbOrder._id;
+          }
+
+          transaction = await Transaction.create({
+            user: req.user._id,
+            order: dbOrderId,
+            razorpayOrderId: razorpay_order_id,
+            razorpayPaymentId: razorpay_payment_id,
+            razorpaySignature: razorpay_signature,
+            amount: req.body.amount || 0, // Fallback amount
+            status: "captured",
+          });
+          console.log(`[PAYMENT-SUCCESS] Fallback transaction created: ${transaction._id}`);
+        }
+      } catch (txnUpdateError) {
+        console.error("CRITICAL: Failed to update/create transaction record in /verify:");
+        console.error(txnUpdateError);
+      }
+
       res.json({ success: true, message: "Payment verified successfully" });
     } else {
       res.status(400).json({ success: false, message: "Invalid signature" });

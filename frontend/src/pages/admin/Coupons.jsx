@@ -6,9 +6,9 @@ import {
   Clock, AlertCircle, Zap, Users, ShoppingCart, ChevronLeft,
   ChevronRight, RefreshCw,
 } from 'lucide-react';
+import { API_BASE_URL } from '../../services/apiConfig';
 
-/* ── CHANGE THIS to your backend base URL ── */
-const API_BASE = '/api/coupons';
+const API_BASE = `${API_BASE_URL}/coupons`;
 
 /* ── colour tokens ── */
 const G  = '#1a6b3c';

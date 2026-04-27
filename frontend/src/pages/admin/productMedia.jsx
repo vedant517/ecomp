@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { toast, Toaster } from "react-hot-toast";
+import { API_BASE_URL } from "../../services/apiConfig";
 
 const OfferPage = () => {
   const [offers, setOffers] = useState([]);
@@ -27,11 +28,10 @@ const OfferPage = () => {
     const fetchData = async () => {
       try {
         const [offerRes, productRes, categoryRes, subcategoryRes] = await Promise.all([
-          fetch("/api/offers"),
-          fetch("/api/products?limit=1000"),
-          fetch("/api/categories"),
-          fetch("/api/subcategories"),
-
+          fetch(`${API_BASE_URL}/offers`),
+          fetch(`${API_BASE_URL}/products?limit=1000`),
+          fetch(`${API_BASE_URL}/categories`),
+          fetch(`${API_BASE_URL}/subcategories`),
         ]);
         const [offerData, productData, categoryData, subcategoryData] = await Promise.all([
           offerRes.json(),
@@ -75,7 +75,7 @@ const OfferPage = () => {
     try {
       const payload = { ...formData };
       if (!payload.variantId) delete payload.variantId;
-      const res = await fetch("/api/offers", {
+      const res = await fetch(`${API_BASE_URL}/offers`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

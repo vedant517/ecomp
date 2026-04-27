@@ -11,6 +11,8 @@ import {
   Search,
   Star,
 } from 'lucide-react';
+import axios from 'axios';
+import { API_BASE_URL } from '../../services/apiConfig';
 import { fetchProducts } from '../../features/products/productSlice';
 import { formatINR } from '../../utils/currency';
 
@@ -69,23 +71,62 @@ function RatingStars({ rating }) {
 export default function ProductReviews() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { items: products = [], loading } = useSelector((state) => state.products);
+  const { items: products = [], loading: productsLoading } = useSelector((state) => state.products);
 
+  const [reviews, setReviews] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeRating, setActiveRating] = useState('all');
   const [sortBy, setSortBy] = useState('rating_desc');
 
   useEffect(() => {
     dispatch(fetchProducts());
+    fetchAllReviews();
   }, [dispatch]);
 
-  const reviewRows = useMemo(() => {
-    return (products || [])
-      .flatMap((product) => {
-        const reviews = Array.isArray(product.reviews) ? product.reviews : [];
+  const fetchAllReviews = async () => {
+    try {
+      setLoading(true);
+      const { data } = await axios.get(`${API_BASE_URL}/reviews`);
+      setReviews(data.data || []);
+    } catch (error) {
+      console.error('Error fetching reviews:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        return reviews.map((review, index) => ({
-          id: `${product._id}-${review.user || review.name || index}`,
+  const reviewRows = useMemo(() => {
+    // 1. Map reviews from the Review collection
+    const standaloneReviews = (reviews || []).map((review) => ({
+      id: review._id,
+      reviewId: review._id,
+      productId: review.product?._id || 'unknown',
+      productName: review.product?.name || 'Untitled Product',
+      productImage:
+        review.product?.image && review.product.image.startsWith('http')
+          ? review.product.image
+          : review.product?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(review.product?.name || 'Item')}&background=10b981&color=fff&bold=true`,
+      productPrice: review.product?.price || 0,
+      categoryName: (typeof review.product?.category === 'string' ? review.product.category : review.product?.category?.name) || 'Uncategorized',
+      brandName: (typeof review.product?.brand === 'string' ? review.product.brand : review.product?.brand?.name) || 'Independent',
+      averageRating: Number(review.product?.rating || 0),
+      productReviewCount: Number(review.product?.numReviews || 0),
+      reviewerName: review.user?.name || review.user?.username || review.user?.email || 'Anonymous Buyer',
+      reviewerId: review.user?._id || 'Guest',
+      rating: Number(review.rating || 0),
+      comment: review.comment || 'No written feedback submitted.',
+      catalogDate: review.createdAt ? new Date(review.createdAt) : null,
+      source: 'collection'
+    }));
+
+    // 2. Map legacy reviews from products that might not be in the collection yet
+    const legacyReviews = (products || []).flatMap((product) => {
+      const pReviews = Array.isArray(product.reviews) ? product.reviews : [];
+      return pReviews
+        .filter(pr => !standaloneReviews.some(sr => sr.reviewerId === pr.user && sr.productId === product._id))
+        .map((review, index) => ({
+          id: `legacy-${product._id}-${review.user || index}`,
           reviewId: review.user || `${product._id}-${index + 1}`,
           productId: product._id,
           productName: product.name || 'Untitled Product',
@@ -94,23 +135,25 @@ export default function ProductReviews() {
               ? product.image
               : product.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(product.name || 'Item')}&background=10b981&color=fff&bold=true`,
           productPrice: product.price || 0,
-          categoryName: product.category?.name || 'Uncategorized',
-          brandName: product.brand?.name || 'Independent',
-          averageRating: Number(product.ratings || 0),
-          productReviewCount: Number(product.numOfReviews || reviews.length || 0),
+          categoryName: (typeof product.category === 'string' ? product.category : product.category?.name) || 'Uncategorized',
+          brandName: (typeof product.brand === 'string' ? product.brand : product.brand?.name) || 'Independent',
+          averageRating: Number(product.rating || 0),
+          productReviewCount: Number(product.numReviews || pReviews.length || 0),
           reviewerName: review.name || 'Anonymous Buyer',
           reviewerId: review.user || 'Guest',
           rating: Number(review.rating || 0),
           comment: review.comment || 'No written feedback submitted.',
           catalogDate: product.createdAt ? new Date(product.createdAt) : null,
+          source: 'legacy'
         }));
-      })
-      .sort((a, b) => {
-        if (sortBy === 'rating_asc') return a.rating - b.rating;
-        if (sortBy === 'product_name') return a.productName.localeCompare(b.productName);
-        return b.rating - a.rating;
-      });
-  }, [products, sortBy]);
+    });
+
+    return [...standaloneReviews, ...legacyReviews].sort((a, b) => {
+      if (sortBy === 'rating_asc') return a.rating - b.rating;
+      if (sortBy === 'product_name') return a.productName.localeCompare(b.productName);
+      return (b.catalogDate || 0) - (a.catalogDate || 0) || b.rating - a.rating;
+    });
+  }, [reviews, products, sortBy]);
 
   const filteredReviews = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -136,7 +179,11 @@ export default function ProductReviews() {
     const averageRating = totalReviews
       ? reviewRows.reduce((sum, review) => sum + review.rating, 0) / totalReviews
       : 0;
-    const reviewedProducts = (products || []).filter((product) => Array.isArray(product.reviews) && product.reviews.length > 0).length;
+    
+    // Count unique product IDs from the merged reviewRows
+    const uniqueReviewedProductIds = new Set(reviewRows.map(r => r.productId));
+    const reviewedProducts = uniqueReviewedProductIds.size;
+    
     const lowRated = reviewRows.filter((review) => review.rating <= 3).length;
 
     return {

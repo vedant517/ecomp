@@ -266,6 +266,16 @@ export const createProductReview = async (req, res) => {
       product.reviews.reduce((acc, item) => item.rating + acc, 0) /
       product.reviews.length;
 
+    // ✅ Also save to standalone Review collection for Admin Panel
+    // Use dynamic import to avoid circular dependency if Review model imports Product
+    const Review = (await import('../../User/models/Review.js')).default;
+    await Review.create({
+      user: req.user._id,
+      product: product._id,
+      rating: Number(rating),
+      comment,
+    });
+
     await product.save();
     res.status(201).json({ success: true, message: 'Review added' });
   } catch (error) {
