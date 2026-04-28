@@ -69,8 +69,8 @@ router.post("/", async (req, res) => {
 router.get("/", async (req, res) => {
   try {
     const reviews = await Review.find()
-      .populate("product", "name image price category brand rating numReviews createdAt")
-      .populate("user", "name username email")
+      .populate("product", "name image price category brand ratings numOfReviews createdAt")
+      .populate("user", "name email")
       .sort({ createdAt: -1 });
 
     res.json({

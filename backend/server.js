@@ -46,6 +46,11 @@ app.use((req, res, next) => {
 });
 
 // ==============================
+// ✅ STATIC FILES
+// ==============================
+app.use("/uploads", express.static("uploads"));
+
+// ==============================
 // ✅ ADMIN ROUTES
 // ==============================
 import productRoutes from "./admin/routes/productRoutes.js";

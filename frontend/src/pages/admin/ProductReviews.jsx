@@ -108,11 +108,11 @@ export default function ProductReviews() {
           ? review.product.image
           : review.product?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(review.product?.name || 'Item')}&background=10b981&color=fff&bold=true`,
       productPrice: review.product?.price || 0,
-      categoryName: (typeof review.product?.category === 'string' ? review.product.category : review.product?.category?.name) || 'Uncategorized',
-      brandName: (typeof review.product?.brand === 'string' ? review.product.brand : review.product?.brand?.name) || 'Independent',
-      averageRating: Number(review.product?.rating || 0),
-      productReviewCount: Number(review.product?.numReviews || 0),
-      reviewerName: review.user?.name || review.user?.username || review.user?.email || 'Anonymous Buyer',
+      categoryName: review.product?.category?.name || 'Uncategorized',
+      brandName: review.product?.brand?.name || 'Independent',
+      averageRating: Number(review.product?.ratings || 0),
+      productReviewCount: Number(review.product?.numOfReviews || 0),
+      reviewerName: review.user?.name || 'Anonymous Buyer',
       reviewerId: review.user?._id || 'Guest',
       rating: Number(review.rating || 0),
       comment: review.comment || 'No written feedback submitted.',
@@ -135,10 +135,10 @@ export default function ProductReviews() {
               ? product.image
               : product.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(product.name || 'Item')}&background=10b981&color=fff&bold=true`,
           productPrice: product.price || 0,
-          categoryName: (typeof product.category === 'string' ? product.category : product.category?.name) || 'Uncategorized',
-          brandName: (typeof product.brand === 'string' ? product.brand : product.brand?.name) || 'Independent',
-          averageRating: Number(product.rating || 0),
-          productReviewCount: Number(product.numReviews || pReviews.length || 0),
+          categoryName: product.category?.name || 'Uncategorized',
+          brandName: product.brand?.name || 'Independent',
+          averageRating: Number(product.ratings || 0),
+          productReviewCount: Number(product.numOfReviews || pReviews.length || 0),
           reviewerName: review.name || 'Anonymous Buyer',
           reviewerId: review.user || 'Guest',
           rating: Number(review.rating || 0),
@@ -179,11 +179,11 @@ export default function ProductReviews() {
     const averageRating = totalReviews
       ? reviewRows.reduce((sum, review) => sum + review.rating, 0) / totalReviews
       : 0;
-    
+
     // Count unique product IDs from the merged reviewRows
     const uniqueReviewedProductIds = new Set(reviewRows.map(r => r.productId));
     const reviewedProducts = uniqueReviewedProductIds.size;
-    
+
     const lowRated = reviewRows.filter((review) => review.rating <= 3).length;
 
     return {
@@ -268,11 +268,10 @@ export default function ProductReviews() {
                   <button
                     key={tab.value}
                     onClick={() => setActiveRating(tab.value)}
-                    className={`px-4 py-2 rounded-full text-[11px] font-black uppercase tracking-[0.16em] transition-all ${
-                      active
+                    className={`px-4 py-2 rounded-full text-[11px] font-black uppercase tracking-[0.16em] transition-all ${active
                         ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10'
                         : 'bg-slate-50 text-slate-400 hover:bg-slate-100'
-                    }`}
+                      }`}
                   >
                     {tab.label}
                   </button>
