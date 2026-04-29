@@ -1,6 +1,7 @@
+console.log(">>> LOADING d:/Ecommerce/backend/User/routes/addressRoutes.js <<<");
 import express from "express";
 import { protect } from "../middleware/authMiddleware.js";
-import Address from "../models/Address.js";
+import Address from "../../models/Address.js";
 
 const router = express.Router();
 
@@ -8,25 +9,49 @@ const router = express.Router();
 // @desc    Add a new address
 // @access  Private
 router.post("/", protect, async (req, res) => {
+  console.log("--- REACHED POST /api/addresses HANDLER ---");
   try {
-    const addressCount = await Address.countDocuments({ user: req.user.id });
-    if (addressCount >= 2) {
-      return res.status(400).json({ message: "You can only store up to 2 addresses. Please delete one to add a new one." });
+    const { contact, shippingAddress } = req.body;
+
+    // Validate required fields
+    if (!contact || !contact.emailOrPhone) {
+      return res.status(400).json({ 
+        success: false,
+        message: "contact.emailOrPhone is required" 
+      });
     }
 
-    const { contact, shippingAddress } = req.body;
+    if (!shippingAddress) {
+      return res.status(400).json({ 
+        success: false,
+        message: "shippingAddress is required with fullName, phone, address, city, postalCode, state" 
+      });
+    }
+
+    const { fullName, phone, address, city, postalCode, state } = shippingAddress;
+    if (!fullName || !phone || !address || !city || !postalCode || !state) {
+      return res.status(400).json({ 
+        success: false,
+        message: "shippingAddress must include: fullName, phone, address, city, postalCode, state" 
+      });
+    }
+
+
     
-    const address = new Address({
+    const newAddress = new Address({
       user: req.user.id,
       contact,
       shippingAddress,
     });
 
-    const savedAddress = await address.save();
-    res.status(201).json(savedAddress);
+    const savedAddress = await newAddress.save();
+    res.status(201).json({ success: true, data: savedAddress });
   } catch (error) {
     console.error("Save address error:", error);
-    res.status(500).json({ message: "Server error saving address" });
+    res.status(500).json({ 
+      success: false,
+      message: error.message || "Server error saving address" 
+    });
   }
 });
 

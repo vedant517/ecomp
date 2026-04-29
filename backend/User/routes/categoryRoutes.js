@@ -78,6 +78,30 @@ router.get("/", async (req, res) => {
 });
 
 // ==============================
+// ✅ GET ALL SUBCATEGORIES (Public endpoint) - MUST BE BEFORE /:id
+// ==============================
+router.get("/subcategories", async (req, res) => {
+  try {
+    const allSubcats = await mongoose.connection.db
+      .collection("subcategories")
+      .find({})
+      .toArray();
+
+    res.status(200).json({
+      success: true,
+      count: allSubcats.length,
+      data: allSubcats
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+      data: []
+    });
+  }
+});
+
+// ==============================
 // ✅ GET CATEGORY BY SLUG
 // ==============================
 router.get("/slug/:slug", async (req, res) => {
@@ -201,30 +225,6 @@ router.get("/:id/subcategories", async (req, res) => {
       success: false,
       message: "Server error",
       data: [],
-    });
-  }
-});
-
-// ==============================
-// ✅ GET ALL SUBCATEGORIES (Public endpoint)
-// ==============================
-router.get("/subcategories", async (req, res) => {
-  try {
-    const allSubcats = await mongoose.connection.db
-      .collection("subcategories")
-      .find({})
-      .toArray();
-
-    res.status(200).json({
-      success: true,
-      count: allSubcats.length,
-      data: allSubcats
-    });
-  } catch (err) {
-    res.status(500).json({
-      success: false,
-      message: err.message,
-      data: []
     });
   }
 });

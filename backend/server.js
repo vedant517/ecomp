@@ -1,3 +1,4 @@
+console.log(">>> SERVER STARTING FROM d:/Ecommerce/backend/server.js <<<");
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
@@ -98,6 +99,7 @@ import buyNowRoutes from "./User/routes/buyNowRoutes.js";
 app.use("/api/products", userProductRoutes);
 app.use("/api/categories", userCategoryRoutes);
 app.use("/api/orders", userOrderRoutes);
+console.log("Mapping /api/addresses to userAddressRoutes");
 app.use("/api/addresses", userAddressRoutes);
 app.use("/api/coupons", userCouponRoutes);
 app.use("/api/offers", userOfferRoutes);
@@ -151,7 +153,7 @@ app.use((err, req, res, next) => {
     success: false,
     message:
       process.env.NODE_ENV === "production"
-        ? "Internal Server Error"
+        ? (err.status && err.status < 500 ? err.message : "Internal Server Error")
         : err.message,
     stack: process.env.NODE_ENV === "production" ? null : err.stack,
   });
