@@ -1,4 +1,3 @@
-console.log(">>> LOADING d:/Ecommerce/backend/User/routes/addressRoutes.js <<<");
 import express from "express";
 import { protect } from "../middleware/authMiddleware.js";
 import Address from "../../models/Address.js";
@@ -9,8 +8,13 @@ const router = express.Router();
 // @desc    Add a new address
 // @access  Private
 router.post("/", protect, async (req, res) => {
-  console.log("--- REACHED POST /api/addresses HANDLER ---");
   try {
+    if (!req.body) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Request body is missing. Ensure you are sending JSON and 'Content-Type: application/json' header." 
+      });
+    }
     const { contact, shippingAddress } = req.body;
 
     // Validate required fields
